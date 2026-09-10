@@ -4,7 +4,7 @@ Theme URI:   https://proudrwandan.com
 Author:      Saza Murindahabi
 Author URI:  https://proudrwandan.com
 Description: Custom WordPress theme for PRDRWNDN® | Proud Rwandan — a contemporary cultural brand rooted in memory, place and pride.
-Version:     1.1.0
+Version:     1.2.0
 License:     GNU General Public License v2 or later
 Text Domain: prdrwndn
 Tags:        e-commerce, dark, woocommerce, custom
@@ -926,4 +926,84 @@ input, textarea, select { font-family: var(--font-body); }
   .reveal { opacity: 1; transform: none; transition: none; }
   .hero-product-float { animation: none; }
   .marquee-track { animation: none; }
+}
+
+/* ════════════════════════════════════════
+   SHOP PAGE STYLING
+════════════════════════════════════════ */
+
+/* Shop hero */
+.woocommerce-content-wrap { padding: 0 !important; }
+
+/* Result count */
+.woocommerce-result-count {
+  color: var(--muted) !important;
+  font-size: 0.78rem !important;
+  margin: 0 !important;
+}
+
+/* Ordering dropdown */
+.woocommerce-ordering select {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--muted) !important;
+  border-radius: 8px !important;
+  padding: 0.4rem 2rem 0.4rem 0.75rem !important;
+  font-size: 0.75rem !important;
+  font-family: var(--font-body) !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2320AA54' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.6rem center !important;
+}
+
+/* Pagination */
+.woocommerce-pagination ul {
+  display: flex !important;
+  gap: 0.5rem !important;
+  list-style: none !important;
+  padding: 0 !important;
+  justify-content: center !important;
+}
+.woocommerce-pagination ul li a,
+.woocommerce-pagination ul li span {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  border: 1px solid var(--border) !important;
+  background: var(--card) !important;
+  color: var(--muted) !important;
+  text-decoration: none !important;
+  transition: all 0.2s !important;
+}
+.woocommerce-pagination ul li a:hover {
+  border-color: var(--rw-green) !important;
+  color: var(--rw-cream) !important;
+}
+.woocommerce-pagination ul li span.current {
+  background: var(--rw-green) !important;
+  border-color: var(--rw-green) !important;
+  color: #fff !important;
+}
+
+/* Shop page breadcrumb */
+.woocommerce .woocommerce-breadcrumb {
+  display: none !important;
+}
+
+/* Category filter chips hover */
+.shop-cat-chip:hover {
+  border-color: rgba(255,255,255,0.3) !important;
+  color: var(--rw-cream) !important;
+}
+
+/* Mobile shop */
+@media (max-width: 768px) {
+  .woocommerce-ordering select { font-size: 0.7rem !important; }
 }
