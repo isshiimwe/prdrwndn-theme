@@ -615,7 +615,7 @@ function prdrwndn_check_for_update( $transient ) {
     // If GitHub has a newer version, tell WordPress about it
     if ( version_compare( $latest_ver, $current_ver, '>' ) ) {
 
-        // Find the zip asset in the release
+        // Find the ATTACHED zip asset — must be named prdrwndn-theme.zip
         $zip_url = '';
         if ( ! empty( $cached->assets ) ) {
             foreach ( $cached->assets as $asset ) {
@@ -626,9 +626,9 @@ function prdrwndn_check_for_update( $transient ) {
             }
         }
 
-        // Fallback to auto-generated zip if no asset found
+        // NEVER use auto-generated zip — wrong folder name breaks WordPress
         if ( empty( $zip_url ) ) {
-            $zip_url = "https://github.com/{$github_repo}/archive/refs/tags/{$cached->tag_name}.zip";
+            return $transient; // Skip — no attached zip found
         }
 
         $transient->response[ $theme_slug ] = [
