@@ -4,7 +4,7 @@ Theme URI:   https://proudrwandan.com
 Author:      Saza Murindahabi
 Author URI:  https://proudrwandan.com
 Description: Custom WordPress theme for PRDRWNDN® | Proud Rwandan — a contemporary cultural brand rooted in memory, place and pride.
-Version:     1.2.0
+Version:     1.4.0
 License:     GNU General Public License v2 or later
 Text Domain: prdrwndn
 Tags:        e-commerce, dark, woocommerce, custom
@@ -1007,3 +1007,158 @@ input, textarea, select { font-family: var(--font-body); }
 @media (max-width: 768px) {
   .woocommerce-ordering select { font-size: 0.7rem !important; }
 }
+
+/* ════════════════════════════════════════
+   CUSTOM PRODUCT CARD — SHOP GRID
+════════════════════════════════════════ */
+
+/* Product list — override WooCommerce defaults */
+.woocommerce ul.products {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+  gap: 1px !important;
+  background: var(--border) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  overflow: hidden !important;
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  float: none !important;
+  width: 100% !important;
+}
+
+/* Each li.product */
+.woocommerce ul.products li.product {
+  background: var(--card) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: auto !important;
+  float: none !important;
+  clear: none !important;
+  transition: background 0.2s !important;
+}
+.woocommerce ul.products li.product:hover {
+  background: var(--card2) !important;
+}
+
+/* Our custom card link */
+.prdrwndn-product-card {
+  display: flex !important;
+  flex-direction: column !important;
+  text-decoration: none !important;
+  height: 100% !important;
+  color: inherit !important;
+}
+
+/* Image wrapper */
+.prdrwndn-card-img-wrap {
+  position: relative !important;
+  overflow: hidden !important;
+  background: var(--surface2) !important;
+  aspect-ratio: 1 !important;
+}
+.prdrwndn-card-img-wrap img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  display: block !important;
+  transition: transform 0.4s ease !important;
+}
+.prdrwndn-product-card:hover .prdrwndn-card-img-wrap img {
+  transform: scale(1.04) !important;
+}
+
+/* Sale badge */
+.prdrwndn-sale-badge {
+  position: absolute !important;
+  top: 10px !important;
+  left: 10px !important;
+  background: var(--rw-green) !important;
+  color: #fff !important;
+  font-size: 0.65rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  padding: 3px 8px !important;
+  border-radius: 4px !important;
+  z-index: 2 !important;
+}
+
+/* Card info */
+.prdrwndn-card-info {
+  padding: 0.85rem 0.9rem 0.5rem !important;
+  flex: 1 !important;
+}
+.prdrwndn-card-name {
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  color: var(--rw-cream) !important;
+  line-height: 1.35 !important;
+  margin: 0 0 0.4rem !important;
+  font-family: var(--font-body) !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
+.prdrwndn-card-price {
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  color: var(--rw-green) !important;
+}
+.prdrwndn-card-price del {
+  color: var(--muted2) !important;
+  font-size: 0.8rem !important;
+  font-weight: 400 !important;
+  margin-right: 4px !important;
+}
+
+/* CTA button area */
+.prdrwndn-card-cta {
+  padding: 0 0.9rem 0.9rem !important;
+}
+.prdrwndn-cta-btn {
+  display: block !important;
+  text-align: center !important;
+  padding: 0.55rem 1rem !important;
+  background: rgba(32,170,84,0.08) !important;
+  color: var(--rw-green) !important;
+  border: 1px solid rgba(32,170,84,0.25) !important;
+  border-radius: 8px !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.3px !important;
+  transition: all 0.2s !important;
+}
+.prdrwndn-product-card:hover .prdrwndn-cta-btn {
+  background: var(--rw-green) !important;
+  color: #fff !important;
+  border-color: var(--rw-green) !important;
+}
+
+/* Mobile — 2 columns */
+@media (max-width: 640px) {
+  .woocommerce ul.products {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .prdrwndn-card-name { font-size: 0.78rem !important; }
+  .prdrwndn-card-price { font-size: 0.85rem !important; }
+  .prdrwndn-cta-btn { font-size: 0.68rem !important; padding: 0.45rem !important; }
+}
+
+/* ════════════════════════════════════════
+   SHOP PAGE — REMOVE OLD BLOCKSY CONTENT
+   Hides any leftover slider/heading blocks
+   that WordPress injected on the Shop page
+════════════════════════════════════════ */
+.woocommerce-shop .entry-content,
+.woocommerce-shop .page-title,
+body.woocommerce-page .woocommerce-products-header,
+.woocommerce-products-header__title {
+  display: none !important;
+}
+
+/* Remove WooCommerce default breadcrumbs from shop */
+.woocommerce-breadcrumb { display: none !important; }
