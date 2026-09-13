@@ -8,9 +8,6 @@
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 
-<!-- FLAG STRIPE -->
-<div class="flag-stripe" style="position:fixed;top:0;left:0;right:0;z-index:201;"></div>
-
 <!-- HEADER -->
 <header id="site-header">
   <div class="header-inner">
@@ -63,6 +60,8 @@
     </div>
 
   </div>
+  <!-- Flag stripe separator — sits at bottom of header like footer -->
+  <div class="flag-stripe"></div>
 </header>
 
 <!-- MOBILE MENU -->

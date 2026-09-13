@@ -4,7 +4,7 @@ Theme URI:   https://proudrwandan.com
 Author:      Saza Murindahabi
 Author URI:  https://proudrwandan.com
 Description: Custom WordPress theme for PRDRWNDN® | Proud Rwandan — a contemporary cultural brand rooted in memory, place and pride.
-Version:     1.6.0
+Version:     1.6.1
 License:     GNU General Public License v2 or later
 Text Domain: prdrwndn
 Tags:        e-commerce, dark, woocommerce, custom
@@ -169,7 +169,7 @@ input, textarea, select { font-family: var(--font-body); }
 ═══════════════════════════════════════ */
 #site-header {
   position: fixed;
-  top: 3px; /* sit below the flag stripe */
+  top: 0;
   left: 0; right: 0;
   z-index: 200;
   background: rgba(8,8,8,0.92);
