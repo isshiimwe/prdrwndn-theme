@@ -675,3 +675,20 @@ function prdrwndn_github_setup_notice() {
     <?php
 }
 add_action( 'admin_notices', 'prdrwndn_github_setup_notice' );
+
+
+/* ════════════════════════════════════════════════════
+   FORCE SHOP ARCHIVE TEMPLATE
+   Ensures WooCommerce uses our archive-product.php
+   for the shop page instead of the generic wrapper
+════════════════════════════════════════════════════ */
+function prdrwndn_shop_template( $template ) {
+    if ( is_shop() || is_product_category() || is_product_tag() ) {
+        $custom = get_template_directory() . '/woocommerce/archive-product.php';
+        if ( file_exists( $custom ) ) {
+            return $custom;
+        }
+    }
+    return $template;
+}
+add_filter( 'template_include', 'prdrwndn_shop_template', 99 );
