@@ -16,7 +16,6 @@ $page_desc   = $is_cat ? $current_cat->description : 'Everything we make — for
 
 <!-- SHOP HERO -->
 <section class="prdrwndn-shop-hero">
-  <?php prdrwndn_flag_stripe(); ?>
   <div class="prdrwndn-shop-hero-inner">
     <div class="eyebrow">PRDRWNDN® Store</div>
     <h1 class="prdrwndn-shop-title"><?php echo esc_html( $page_title ); ?></h1>

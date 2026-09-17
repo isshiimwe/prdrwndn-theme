@@ -20,7 +20,6 @@ $cats = get_terms( [ 'taxonomy' => 'product_cat', 'hide_empty' => true, 'exclude
 <!-- HERO -->
 <section style="padding:9rem 2rem 4rem;background:var(--rw-green3);position:relative;overflow:hidden;">
   <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(8,8,8,0.5),rgba(8,8,8,0.9));z-index:1;"></div>
-  <?php prdrwndn_flag_stripe(); ?>
   <div style="position:relative;z-index:2;max-width:var(--max-w);margin:0 auto;">
     <div class="eyebrow">PRDRWNDN®</div>
     <h1 class="display-title" style="font-size:clamp(3rem,8vw,7rem);color:var(--rw-cream);">The Full<br/><em style="color:var(--rw-green);">Collection.</em></h1>
