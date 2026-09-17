@@ -7,7 +7,6 @@ get_header(); ?>
 <!-- HERO -->
 <section style="min-height:70vh;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding:8rem 2rem 4rem;position:relative;overflow:hidden;background:var(--rw-green3);">
   <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(8,8,8,0.4) 0%,rgba(8,8,8,0.85) 100%);z-index:1;"></div>
-  <?php prdrwndn_flag_stripe(); ?>
   <div style="position:relative;z-index:2;max-width:700px;">
     <div class="eyebrow">Our Story</div>
     <h1 style="font-family:var(--font-serif);font-size:clamp(3rem,8vw,7rem);line-height:1;font-weight:400;color:var(--rw-cream);margin-bottom:1rem;">
