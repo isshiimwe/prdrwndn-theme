@@ -4,7 +4,7 @@ Theme URI:   https://proudrwandan.com
 Author:      Saza Murindahabi
 Author URI:  https://proudrwandan.com
 Description: Custom WordPress theme for PRDRWNDN® | Proud Rwandan — a contemporary cultural brand rooted in memory, place and pride.
-Version:     1.6.4
+Version:     1.6.8
 License:     GNU General Public License v2 or later
 Text Domain: prdrwndn
 Tags:        e-commerce, dark, woocommerce, custom
@@ -613,7 +613,8 @@ input, textarea, select { font-family: var(--font-body); }
 
 .woo-products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  justify-content: start;
   gap: 1px;
   background: var(--border);
   border: 1px solid var(--border);
@@ -767,7 +768,8 @@ input, textarea, select { font-family: var(--font-body); }
 ═══════════════════════════════════════ */
 .reviews-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  justify-content: start;
   gap: 1px;
   background: var(--border);
   border: 1px solid var(--border);
@@ -1015,7 +1017,8 @@ input, textarea, select { font-family: var(--font-body); }
 /* Product list — override WooCommerce defaults */
 .woocommerce ul.products {
   display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  justify-content: start !important;
   gap: 1px !important;
   background: var(--border) !important;
   border: 1px solid var(--border) !important;
