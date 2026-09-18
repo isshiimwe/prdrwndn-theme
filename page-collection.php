@@ -49,7 +49,7 @@ $cats = get_terms( [ 'taxonomy' => 'product_cat', 'hide_empty' => true, 'exclude
 <!-- PRODUCTS GRID -->
 <section class="section-pad">
   <div class="container">
-    <div id="collection-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+    <div id="collection-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));justify-content:start;gap:12px;">
       <?php while ( $collection->have_posts() ) : $collection->the_post();
         global $product;
         $product = wc_get_product( get_the_ID() );
@@ -65,7 +65,7 @@ $cats = get_terms( [ 'taxonomy' => 'product_cat', 'hide_empty' => true, 'exclude
         $is_new   = ( strtotime( get_the_date( 'Y-m-d' ) ) > strtotime( '-30 days' ) );
       ?>
         <div class="collection-item" data-cats="<?php echo esc_attr( $cats_str ); ?>"
-             style="background:var(--card);cursor:pointer;transition:background 0.2s;"
+             style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:background 0.2s;"
              onmouseenter="this.style.background='var(--card2)'"
              onmouseleave="this.style.background='var(--card)'">
           <a href="<?php echo esc_url( $link ); ?>" style="display:block;">
