@@ -692,3 +692,95 @@ function prdrwndn_shop_template( $template ) {
     return $template;
 }
 add_filter( 'template_include', 'prdrwndn_shop_template', 99 );
+
+
+/* ════════════════════════════════════════════════════
+   NEWSLETTER SUBSCRIBE — Footer email capture
+   Stores subscribers as a WordPress option (list of
+   email => date). View/export via:
+   Tools > Site Health > Info (or add an admin page later)
+   No third-party plugin required.
+════════════════════════════════════════════════════ */
+function prdrwndn_handle_subscribe() {
+    check_ajax_referer( 'prdrwndn_subscribe', 'nonce' );
+
+    $email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+
+    if ( empty( $email ) || ! is_email( $email ) ) {
+        wp_send_json_error( [ 'message' => 'Please enter a valid email address.' ] );
+    }
+
+    $subscribers = get_option( 'prdrwndn_subscribers', [] );
+
+    // Already subscribed
+    if ( isset( $subscribers[ $email ] ) ) {
+        wp_send_json_success( [ 'message' => "You're already on the list!" ] );
+    }
+
+    $subscribers[ $email ] = current_time( 'mysql' );
+    update_option( 'prdrwndn_subscribers', $subscribers, false );
+
+    // Optional: notify admin of new subscriber
+    $admin_email = get_option( 'admin_email' );
+    if ( $admin_email ) {
+        wp_mail(
+            $admin_email,
+            'New PRDRWNDN Newsletter Subscriber',
+            "New subscriber: {$email}\nTotal subscribers: " . count( $subscribers )
+        );
+    }
+
+    wp_send_json_success( [ 'message' => "You're subscribed! 🇷🇼" ] );
+}
+add_action( 'wp_ajax_prdrwndn_subscribe',        'prdrwndn_handle_subscribe' );
+add_action( 'wp_ajax_nopriv_prdrwndn_subscribe', 'prdrwndn_handle_subscribe' );
+
+/* Simple admin page to view/export subscribers:
+   Dashboard > Tools > Subscribers */
+function prdrwndn_subscribers_admin_page() {
+    add_management_page(
+        'Newsletter Subscribers',
+        'Subscribers',
+        'manage_options',
+        'prdrwndn-subscribers',
+        'prdrwndn_render_subscribers_page'
+    );
+}
+add_action( 'admin_menu', 'prdrwndn_subscribers_admin_page' );
+
+function prdrwndn_render_subscribers_page() {
+    $subscribers = get_option( 'prdrwndn_subscribers', [] );
+    $count = count( $subscribers );
+    ?>
+    <div class="wrap">
+        <h1>Newsletter Subscribers (<?php echo esc_html( $count ); ?>)</h1>
+        <?php if ( $count === 0 ) : ?>
+            <p>No subscribers yet.</p>
+        <?php else : ?>
+            <p>
+                <button type="button" class="button button-primary" onclick="prdrwndnCopyEmails()">Copy all emails</button>
+            </p>
+            <table class="widefat striped">
+                <thead><tr><th>Email</th><th>Subscribed On</th></tr></thead>
+                <tbody>
+                <?php foreach ( $subscribers as $email => $date ) : ?>
+                    <tr><td><?php echo esc_html( $email ); ?></td><td><?php echo esc_html( $date ); ?></td></tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+            <textarea id="prdrwndn-email-list" style="position:absolute;left:-9999px;"><?php echo esc_textarea( implode( ', ', array_keys( $subscribers ) ) ); ?></textarea>
+            <script>
+            function prdrwndnCopyEmails() {
+                var ta = document.getElementById('prdrwndn-email-list');
+                ta.style.position = 'static';
+                ta.select();
+                document.execCommand('copy');
+                ta.style.position = 'absolute';
+                ta.style.left = '-9999px';
+                alert('Emails copied to clipboard!');
+            }
+            </script>
+        <?php endif; ?>
+    </div>
+    <?php
+}

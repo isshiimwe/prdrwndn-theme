@@ -52,11 +52,18 @@
         <ul class="footer-links">
           <li><a href="mailto:<?php echo antispambot( 'info@proudrwandan.com' ); ?>">info@proudrwandan.com</a></li>
           <li><a href="tel:+14803827077">+1 (480) 382-7077</a></li>
-          <li style="margin-top:0.5rem;"><a href="https://instagram.com/prdrwndn" target="_blank" rel="noopener">Instagram</a></li>
-          <li><a href="https://tiktok.com/@prdrwndn" target="_blank" rel="noopener">TikTok</a></li>
-          <li><a href="https://facebook.com/prdrwndn" target="_blank" rel="noopener">Facebook</a></li>
-          <li><a href="https://x.com/prdrwndn" target="_blank" rel="noopener">X (Twitter)</a></li>
         </ul>
+
+        <div class="footer-subscribe" style="margin-top:1.25rem;">
+          <div class="footer-col-title" style="margin-bottom:0.5rem;">Stay Connected</div>
+          <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.75rem;line-height:1.5;">Get updates on new drops and offers.</p>
+          <form id="prdrwndn-subscribe-form" style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <input type="email" name="subscribe_email" placeholder="Your email" required
+                   style="flex:1 1 160px;min-width:0;background:var(--surface);border:1px solid var(--border);color:var(--rw-cream);border-radius:8px;padding:0.6rem 0.85rem;font-size:0.85rem;font-family:var(--font-body);" />
+            <button type="submit" style="flex-shrink:0;background:var(--rw-green);color:#fff;border:none;border-radius:8px;padding:0.6rem 1.1rem;font-size:0.82rem;font-weight:700;cursor:pointer;transition:background 0.2s;">Subscribe</button>
+          </form>
+          <div id="prdrwndn-subscribe-msg" style="font-size:0.78rem;margin-top:0.5rem;display:none;"></div>
+        </div>
       </div>
 
     </div><!-- /footer-grid -->
@@ -75,6 +82,57 @@
 
   </div>
 </footer>
+
+<script>
+(function() {
+  var form = document.getElementById('prdrwndn-subscribe-form');
+  if (!form) return;
+  var msg = document.getElementById('prdrwndn-subscribe-msg');
+  var btn = form.querySelector('button[type="submit"]');
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var email = form.subscribe_email.value.trim();
+    if (!email) return;
+
+    btn.disabled = true;
+    var originalText = btn.textContent;
+    btn.textContent = '...';
+
+    var data = new URLSearchParams();
+    data.append('action', 'prdrwndn_subscribe');
+    data.append('email', email);
+    data.append('nonce', '<?php echo esc_js( wp_create_nonce( 'prdrwndn_subscribe' ) ); ?>');
+
+    fetch('<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: data.toString()
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      msg.style.display = 'block';
+      if (res.success) {
+        msg.style.color = 'var(--rw-green)';
+        msg.textContent = res.data.message || "You're subscribed!";
+        form.reset();
+      } else {
+        msg.style.color = '#ff6b6b';
+        msg.textContent = (res.data && res.data.message) || 'Something went wrong. Try again.';
+      }
+    })
+    .catch(function() {
+      msg.style.display = 'block';
+      msg.style.color = '#ff6b6b';
+      msg.textContent = 'Something went wrong. Try again.';
+    })
+    .finally(function() {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    });
+  });
+})();
+</script>
 
 <?php wp_footer(); ?>
 </body>
