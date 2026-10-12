@@ -4,7 +4,7 @@ Theme URI:   https://proudrwandan.com
 Author:      Saza Murindahabi
 Author URI:  https://proudrwandan.com
 Description: Custom WordPress theme for PRDRWNDN® | Proud Rwandan — a contemporary cultural brand rooted in memory, place and pride.
-Version:     1.7.1
+Version:     1.7.2
 License:     GNU General Public License v2 or later
 Text Domain: prdrwndn
 Tags:        e-commerce, dark, woocommerce, custom
@@ -186,6 +186,8 @@ input, textarea, select { font-family: var(--font-body); }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  max-width: var(--max-w);   /* contained like .container; the bar behind it stays full width */
+  margin: 0 auto;
   padding: 1.1rem 2rem;
 }
 @media (max-width: 768px) { .header-inner { padding: 0.85rem 1.25rem; } }
@@ -342,7 +344,9 @@ input, textarea, select { font-family: var(--font-body); }
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-end;
-  padding: 5rem 2rem 5rem; /* top clears fixed header */
+  /* Top clears the fixed header. Sides line the content up with .container:
+     % here is the page width, so this is the gap outside the 1200px box plus its 2rem gutter */
+  padding: 5rem max(2rem, calc((100% - var(--max-w)) / 2 + 2rem));
   position: relative;
   overflow: hidden;
   background: var(--rw-green3);
@@ -362,9 +366,9 @@ input, textarea, select { font-family: var(--font-body); }
 }
 .hero-product-float {
   position: absolute;
-  right: 5%; top: 50%;
+  right: max(5%, calc((100% - var(--max-w)) / 2 + 4rem)); top: 50%;
   transform: translateY(-50%);
-  width: 42vw; max-width: 520px;
+  width: 42vw; max-width: 480px;
   z-index: 2;
   filter: drop-shadow(0 0 60px rgba(32,170,84,0.25));
   animation: hero-float 6s ease-in-out infinite;
@@ -421,7 +425,7 @@ input, textarea, select { font-family: var(--font-body); }
 .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
 .hero-stats {
   position: absolute;
-  bottom: 5rem; right: 2rem;
+  bottom: 5rem; right: max(2rem, calc((100% - var(--max-w)) / 2 + 2rem));
   z-index: 3;
   display: flex; flex-direction: column; gap: 1.25rem;
   text-align: right;
@@ -1189,7 +1193,7 @@ body.woocommerce-page .woocommerce-products-header,
 .prdrwndn-shop-hero-inner {
   position: relative;
   z-index: 1;
-  max-width: var(--max-w);
+  max-width: calc(var(--max-w) - 4rem);   /* section already adds 2rem each side; lines up with .container */
   margin: 0 auto;
 }
 .prdrwndn-shop-title {
@@ -1284,7 +1288,7 @@ body.woocommerce-page .woocommerce-products-header,
   border-bottom: 1px solid var(--border2);
 }
 .woo-page-hero-inner {
-  max-width: var(--max-w);
+  max-width: calc(var(--max-w) - 4rem);   /* lines up with .container */
   margin: 0 auto;
   position: relative;
   z-index: 1;

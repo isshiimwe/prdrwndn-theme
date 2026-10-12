@@ -3,30 +3,32 @@
    Menu left, logo centred, cart right.
    Paste at the END of prdrwndn-theme-child/style.css
    Desktop (above 900px) is untouched.
+   !important is only used where the child's "CRITICAL HEADER FIXES"
+   block already forces a value; this block has to come after it.
 ═══════════════════════════════════════ */
 @media (max-width: 900px) {
 
   /* The header itself becomes the card */
   #site-header {
-    top: calc(env(safe-area-inset-top, 0px) + 10px);
-    left: 10px;
-    right: 10px;
+    top: calc(env(safe-area-inset-top, 0px) + 10px) !important;
+    left: 10px !important;
+    right: 10px !important;
     border-radius: 16px;
     overflow: hidden;                     /* clips the flag stripe to the curve */
-    background: rgba(22, 28, 22, 0.86);   /* --card, translucent */
+    background: rgba(22, 28, 22, 0.86) !important;   /* --card, translucent */
     border: 1px solid rgba(255, 255, 255, 0.09);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5) !important;
   }
   #site-header.scrolled {
-    background: rgba(22, 28, 22, 0.96);
+    background: rgba(22, 28, 22, 0.96) !important;
   }
 
   /* 3-column grid: equal side columns keep the logo truly centred */
   .header-inner {
-    display: grid;
+    display: grid !important;
     grid-template-columns: 44px 1fr 44px;
     align-items: center;
-    padding: 4px 8px;
+    padding: 4px 8px !important;
   }
   .header-actions { display: contents; }   /* lets cart + menu join the grid */
 
@@ -34,7 +36,7 @@
   .header-cart-btn { grid-column: 3; grid-row: 1; justify-self: end; }
 
   /* Logo: covers both the text fallback and an uploaded logo image.
-     (The browser pulls .custom-logo-link out of .site-logo, so target both.) */
+     (On theme 1.7.0 the browser pulls .custom-logo-link out of .site-logo, so target both.) */
   .site-logo,
   .header-inner > .custom-logo-link {
     grid-column: 2;
@@ -43,12 +45,12 @@
     align-items: center;
     text-align: center;
   }
-  #site-header .custom-logo-link img {
+  #site-header .custom-logo-link img,
+  #site-header img.custom-logo {
     display: block;
-    max-height: 34px;
+    max-height: 34px !important;
     width: auto;
   }
-  .logo-main { font-size: 1.35rem; }
 
   /* Get the App leaves the header on mobile (footer + menu keep it) */
   .header-app-btn { display: none; }
