@@ -1,0 +1,107 @@
+/* ═══════════════════════════════════════
+   MOBILE HEADER: floating card
+   Menu left, logo centred, cart right.
+   Paste at the END of prdrwndn-theme-child/style.css
+   Desktop (above 900px) is untouched.
+═══════════════════════════════════════ */
+@media (max-width: 900px) {
+
+  /* The header itself becomes the card */
+  #site-header {
+    top: calc(env(safe-area-inset-top, 0px) + 10px);
+    left: 10px;
+    right: 10px;
+    border-radius: 16px;
+    overflow: hidden;                     /* clips the flag stripe to the curve */
+    background: rgba(22, 28, 22, 0.86);   /* --card, translucent */
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  }
+  #site-header.scrolled {
+    background: rgba(22, 28, 22, 0.96);
+  }
+
+  /* 3-column grid: equal side columns keep the logo truly centred */
+  .header-inner {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    padding: 4px 8px;
+  }
+  .header-actions { display: contents; }   /* lets cart + menu join the grid */
+
+  .mobile-menu-btn { grid-column: 1; grid-row: 1; justify-self: start; }
+  .header-cart-btn { grid-column: 3; grid-row: 1; justify-self: end; }
+
+  /* Logo: covers both the text fallback and an uploaded logo image.
+     (The browser pulls .custom-logo-link out of .site-logo, so target both.) */
+  .site-logo,
+  .header-inner > .custom-logo-link {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
+    align-items: center;
+    text-align: center;
+  }
+  #site-header .custom-logo-link img {
+    display: block;
+    max-height: 34px;
+    width: auto;
+  }
+  .logo-main { font-size: 1.35rem; }
+
+  /* Get the App leaves the header on mobile (footer + menu keep it) */
+  .header-app-btn { display: none; }
+
+  /* Icons sit straight on the card, no boxes; 44px tap targets */
+  .mobile-menu-btn,
+  .header-cart-btn {
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: 0;
+    border-radius: 10px;
+  }
+  .mobile-menu-btn:focus-visible,
+  .header-cart-btn:focus-visible {
+    outline: 2px solid var(--rw-green);
+    outline-offset: -2px;
+  }
+  .mobile-menu-btn span {
+    width: 22px;
+    transform-origin: center;
+  }
+
+  /* Hamburger turns into an X while the menu is open */
+  .mobile-menu-btn[aria-expanded="true"] span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+  .mobile-menu-btn[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+  .mobile-menu-btn[aria-expanded="true"] span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+  /* Line-style bag icon in place of the 🛒 emoji (delete this block to keep the emoji) */
+  .header-cart-btn {
+    font-size: 0;
+    color: var(--rw-cream);
+  }
+  .header-cart-btn::before {
+    content: "";
+    width: 23px;
+    height: 23px;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 8h13l-1 12.5h-11z'/%3E%3Cpath d='M9 10.5V6.5a3 3 0 0 1 6 0v4'/%3E%3C/svg%3E") center / contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 8h13l-1 12.5h-11z'/%3E%3Cpath d='M9 10.5V6.5a3 3 0 0 1 6 0v4'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  .header-cart-btn .cart-count {
+    font-size: 9px;
+    top: 5px;
+    right: 3px;
+  }
+
+  /* Menu overlay clears the floating card (and the notch in the installed app) */
+  #mobile-menu {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 6.5rem);
+  }
+}
+
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
+  .mobile-menu-btn span { transition: none; }
+}

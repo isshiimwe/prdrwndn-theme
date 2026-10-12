@@ -12,15 +12,15 @@
 <header id="site-header">
   <div class="header-inner">
 
-    <!-- Logo -->
-    <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="site-logo" aria-label="<?php bloginfo( 'name' ); ?>">
-      <?php if ( has_custom_logo() ) :
-        the_custom_logo();
-      else : ?>
-        <span class="logo-main">PRDRNDN<em>®</em></span>
+    <!-- Logo: the_custom_logo() prints its own link, so it gets a div wrapper (links can't nest) -->
+    <?php if ( has_custom_logo() ) : ?>
+      <div class="site-logo"><?php the_custom_logo(); ?></div>
+    <?php else : ?>
+      <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="site-logo" aria-label="<?php bloginfo( 'name' ); ?>">
+        <span class="logo-main">PRDRWNDN<em>®</em></span>
         <span class="logo-sub">Proud Rwandan</span>
-      <?php endif; ?>
-    </a>
+      </a>
+    <?php endif; ?>
 
     <!-- Primary Nav -->
     <nav class="main-nav" aria-label="Primary navigation">
