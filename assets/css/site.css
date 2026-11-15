@@ -557,7 +557,6 @@ a.prd-info-item:hover { border-color: var(--prd-ink); }
 
 @media (min-width: 900px) {
   .prd .woocommerce div.product, .prd div.product { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 56px; align-items: start; }
-  .prd div.product .summary { position: sticky; top: calc(var(--prd-header-h) + 24px); }
 }
 
 /* ═══════════════ CART / CHECKOUT / ACCOUNT ═══════════════ */
