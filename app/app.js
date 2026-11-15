@@ -716,7 +716,22 @@
   }
   window.addEventListener('online', function () { onlineState(); loadCatalog().then(refreshCards); loadCart(); });
   window.addEventListener('offline', onlineState);
-  document.addEventListener('visibilitychange', function () { if (!document.hidden && S.ready) loadCart(); });
+  /* Live updates: when the app comes back to the front, check for a new version.
+     If the store published one, reload quietly (unless a product is open). */
+  var lastCheck = Date.now();
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden || !S.ready) return;
+    loadCart();
+    if (Date.now() - lastCheck < 30000) return;
+    lastCheck = Date.now();
+    if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) navigator.serviceWorker.getRegistration().then(function (r) { if (r) r.update(); }).catch(function () {});
+    loadSession().then(function (s) {
+      if (s && s.version && C.version && s.version !== C.version && sheet.hidden) {
+        try { sessionStorage.setItem('prdLaunched', '1'); } catch (e) {}
+        location.reload();
+      }
+    });
+  });
 
   /* ════════ Start ════════ */
   var started = Date.now();

@@ -858,6 +858,20 @@ add_action( 'admin_post_prdrwndn_app_update', function () {
         if ( false === @file_put_contents( $target, $content ) ) $ok = false;
     }
 
+    // Tell browsers and the CDN to re-check these files every time, so a new
+    // version reaches installed apps on their next launch.
+    if ( ! function_exists( 'insert_with_markers' ) ) require_once ABSPATH . 'wp-admin/includes/misc.php';
+    $htaccess = ABSPATH . '.htaccess';
+    if ( file_exists( $htaccess ) && is_writable( $htaccess ) ) {
+        insert_with_markers( $htaccess, 'PRDRWNDN app files', [
+            '<IfModule mod_headers.c>',
+            '<FilesMatch "^(service-worker\.js|manifest\.json|app\.html)$">',
+            'Header set Cache-Control "no-cache, max-age=0, must-revalidate"',
+            '</FilesMatch>',
+            '</IfModule>',
+        ] );
+    }
+
     wp_safe_redirect( admin_url( 'tools.php?page=prdrwndn-app&prd-app=' . ( $ok ? 'updated' : 'failed' ) ) );
     exit;
 } );

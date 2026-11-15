@@ -111,8 +111,9 @@ function prdrwndn_app_splash_links() {
 ════════════════════════════════════════════════════ */
 function prdrwndn_app_session_data() {
     $u = wp_get_current_user();
+    $version = wp_get_theme( get_template() )->get( 'Version' );
     if ( ! $u || ! $u->ID ) {
-        return [ 'user' => null, 'nonce' => '', 'passkeys' => 0, 'wishlist' => [] ];
+        return [ 'user' => null, 'nonce' => '', 'passkeys' => 0, 'wishlist' => [], 'version' => $version ];
     }
     $first = trim( (string) $u->first_name );
     $name  = $first !== '' ? $first : $u->display_name;
@@ -123,6 +124,7 @@ function prdrwndn_app_session_data() {
         'nonce'    => wp_create_nonce( 'wp_rest' ),
         'passkeys' => count( prdrwndn_passkeys( $u->ID ) ),
         'wishlist' => prdrwndn_wishlist( $u->ID ),
+        'version'  => $version,
     ];
 }
 
