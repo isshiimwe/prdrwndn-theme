@@ -7,83 +7,77 @@
 </head>
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
+<a class="prd-skip" href="#prd-main">Skip to content</a>
 
-<!-- HEADER -->
-<header id="site-header">
-  <div class="header-inner">
+<?php
+$prd_announce = trim( (string) prd_mod( 'prd_announce' ) );
+$prd_cart_n   = ( class_exists( 'WooCommerce' ) && WC()->cart ) ? WC()->cart->get_cart_contents_count() : 0;
+$prd_lanes    = [
+    [ 'Jerseys',        prdrwndn_cat_url( 'prd_jersey_cat' ) ],
+    [ 'Car Fresheners', prdrwndn_cat_url( 'prd_fresh_cat' ) ],
+    [ 'Flags',          prdrwndn_cat_url( 'prd_flag_cat' ) ],
+    [ 'T-Shirts',       prdrwndn_cat_url( 'prd_tee_cat' ) ],
+];
+$prd_shop = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
+?>
 
-    <!-- Logo: the_custom_logo() prints its own link, so it gets a div wrapper (links can't nest) -->
-    <?php if ( has_custom_logo() ) : ?>
-      <div class="site-logo"><?php the_custom_logo(); ?></div>
-    <?php else : ?>
-      <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="site-logo" aria-label="<?php bloginfo( 'name' ); ?>">
-        <span class="logo-main">PRDRWNDN<em>®</em></span>
-        <span class="logo-sub">Proud Rwandan</span>
-      </a>
-    <?php endif; ?>
+<?php if ( $prd_announce !== '' ) : ?>
+<div class="prd-topbar"><?php echo esc_html( $prd_announce ); ?></div>
+<?php endif; ?>
 
-    <!-- Primary Nav -->
-    <nav class="main-nav" aria-label="Primary navigation">
-      <?php wp_nav_menu( [
-        'theme_location' => 'primary',
-        'container'      => false,
-        'menu_class'     => '',
-        'fallback_cb'    => function() {
-          echo '<a href="' . home_url( '/' ) . '">Home</a>';
-          echo '<a href="' . home_url( '/shop/' ) . '">Shop</a>';
-          echo '<a href="' . home_url( '/about/' ) . '">About</a>';
-          echo '<a href="' . home_url( '/collection/' ) . '">Collection</a>';
-        },
-        'items_wrap'     => '%3$s',
-        'link_before'    => '',
-        'link_after'     => '',
-      ] ); ?>
+<header class="prd-header" id="prd-header">
+  <div class="prd-header-in">
+
+    <button class="prd-icon-btn prd-menu-btn" id="prd-menu-btn" aria-controls="prd-menu" aria-expanded="false" aria-label="Open menu">
+      <span class="prd-i-open"><?php echo prdrwndn_icon( 'menu' ); ?></span>
+      <span class="prd-i-close"><?php echo prdrwndn_icon( 'close' ); ?></span>
+    </button>
+
+    <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="prd-brand" aria-label="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?> — home">
+      <?php
+      $logo_id = get_theme_mod( 'custom_logo' );
+      if ( $logo_id ) :
+          echo wp_get_attachment_image( $logo_id, 'medium', false, [ 'class' => 'prd-brand-img', 'alt' => 'PRDRWNDN®', 'loading' => 'eager' ] );
+      else : ?>
+        <span class="prd-wordmark">PRDRWNDN<sup>®</sup></span>
+      <?php endif; ?>
+    </a>
+
+    <nav class="prd-nav" aria-label="Primary">
+      <?php foreach ( $prd_lanes as $l ) : ?>
+        <a href="<?php echo esc_url( $l[1] ); ?>"><?php echo esc_html( $l[0] ); ?></a>
+      <?php endforeach; ?>
+      <a href="<?php echo esc_url( $prd_shop ); ?>">Shop all</a>
+      <a href="<?php echo esc_url( home_url( '/about/' ) ); ?>">About</a>
     </nav>
 
-    <!-- Actions -->
-    <div class="header-actions">
-      <a href="<?php echo esc_url( home_url( '/app.html' ) ); ?>" class="header-app-btn">
-        📲 Get the App
-      </a>
+    <div class="prd-header-actions">
       <?php if ( class_exists( 'WooCommerce' ) ) : ?>
-        <a href="<?php echo esc_url( wc_get_cart_url() ); ?>" class="header-cart-btn" aria-label="Cart">
-          🛒
-          <?php $count = WC()->cart->get_cart_contents_count(); ?>
-          <?php if ( $count > 0 ) : ?>
-            <span class="cart-count"><?php echo esc_html( $count ); ?></span>
-          <?php endif; ?>
+        <a href="<?php echo esc_url( wc_get_cart_url() ); ?>" class="prd-icon-btn prd-cart-btn" aria-label="Cart, <?php echo (int) $prd_cart_n; ?> items">
+          <?php echo prdrwndn_icon( 'cart' ); ?>
+          <span class="prd-cart-count cart-count" <?php echo $prd_cart_n ? '' : 'hidden'; ?>><?php echo (int) $prd_cart_n; ?></span>
         </a>
       <?php endif; ?>
-      <button class="mobile-menu-btn" id="mobile-menu-toggle" aria-label="Open menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
     </div>
-
   </div>
-  <!-- Flag stripe separator — sits at bottom of header like footer -->
-  <div class="flag-stripe"></div>
+
+  <div class="prd-menu" id="prd-menu" hidden>
+    <nav class="prd-menu-lanes" aria-label="Shop">
+      <?php foreach ( $prd_lanes as $l ) : ?>
+        <a href="<?php echo esc_url( $l[1] ); ?>"><?php echo esc_html( $l[0] ); ?> <?php echo prdrwndn_icon( 'arrow' ); ?></a>
+      <?php endforeach; ?>
+    </nav>
+    <nav class="prd-menu-links" aria-label="More">
+      <a href="<?php echo esc_url( $prd_shop ); ?>">Shop all</a>
+      <a href="<?php echo esc_url( home_url( '/about/' ) ); ?>">About</a>
+      <?php if ( class_exists( 'WooCommerce' ) ) : ?><a href="<?php echo esc_url( wc_get_page_permalink( 'myaccount' ) ); ?>">My account</a><?php endif; ?>
+      <a href="<?php echo esc_url( home_url( '/app.html' ) ); ?>">Get the app</a>
+    </nav>
+    <?php $wa = prdrwndn_whatsapp_url( 'Hi PRDRWNDN!' ); if ( $wa ) : ?>
+      <a class="prd-btn prd-btn-wa prd-btn-block" href="<?php echo esc_url( $wa ); ?>" target="_blank" rel="noopener"><?php echo prdrwndn_icon( 'whatsapp' ); ?><span>Message us on WhatsApp</span></a>
+    <?php endif; ?>
+  </div>
+  <?php prdrwndn_flag_stripe( 'prd-flag-thin' ); ?>
 </header>
 
-<!-- MOBILE MENU -->
-<div id="mobile-menu" role="dialog" aria-label="Mobile navigation" aria-hidden="true">
-  <?php wp_nav_menu( [
-    'theme_location' => 'mobile',
-    'container'      => false,
-    'menu_class'     => '',
-    'fallback_cb'    => function() {
-      $links = [
-        home_url( '/' )            => 'Home',
-        home_url( '/shop/' )       => 'Shop',
-        home_url( '/about/' )      => 'About',
-        home_url( '/collection/' ) => 'Collection',
-        home_url( '/app.html' )    => 'Get the App',
-      ];
-      foreach ( $links as $url => $label ) {
-        echo '<a href="' . esc_url( $url ) . '">' . esc_html( $label ) . '</a>';
-      }
-    },
-    'items_wrap' => '%3$s',
-  ] ); ?>
-</div>
-
-<div id="page-wrap">
+<main id="prd-main" class="prd-page">

@@ -1,115 +1,133 @@
-/* PRDRWNDN® Main JS */
+/* PRDRWNDN® Main JS (v2) */
 (function () {
   'use strict';
 
-  // ── Scroll reveal ──
-  var reveals = document.querySelectorAll('.reveal');
-  if ('IntersectionObserver' in window) {
-    var revealObs = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (e.isIntersecting) {
-          e.target.classList.add('visible');
-          revealObs.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.1 });
-    reveals.forEach(function (el) { revealObs.observe(el); });
-  } else {
-    reveals.forEach(function (el) { el.classList.add('visible'); });
+  /* ── Mobile menu ── */
+  var btn = document.getElementById('prd-menu-btn');
+  var menu = document.getElementById('prd-menu');
+  function setMenu(open) {
+    if (!btn || !menu) return;
+    menu.hidden = !open;
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    document.body.classList.toggle('prd-menu-open', open);
+  }
+  if (btn && menu) {
+    btn.addEventListener('click', function () { setMenu(menu.hidden); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !menu.hidden) { setMenu(false); btn.focus(); } });
+    window.addEventListener('resize', function () { if (window.innerWidth > 960 && !menu.hidden) setMenu(false); });
   }
 
-  // ── Header scroll ──
-  var header = document.getElementById('site-header');
+  /* ── Header shadow once the page scrolls ── */
+  var header = document.getElementById('prd-header');
   if (header) {
-    window.addEventListener('scroll', function () {
-      if (window.scrollY > 60) {
-        header.classList.add('scrolled');
-      } else {
-        header.classList.remove('scrolled');
-      }
-    }, { passive: true });
+    var onScroll = function () { header.classList.toggle('is-scrolled', window.scrollY > 8); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
   }
 
-  // ── Mobile menu ──
-  var menuToggle = document.getElementById('mobile-menu-toggle');
-  var mobileMenu = document.getElementById('mobile-menu');
-  if (menuToggle && mobileMenu) {
-    menuToggle.addEventListener('click', function () {
-      var isOpen = mobileMenu.classList.toggle('open');
-      menuToggle.setAttribute('aria-expanded', isOpen);
-      mobileMenu.setAttribute('aria-hidden', !isOpen);
-      document.body.style.overflow = isOpen ? 'hidden' : '';
-    });
+  /* ── Option buttons for variable products (sizes, scents) ──
+     Keeps WooCommerce's own <select> working underneath, so price, stock
+     and add-to-cart behave exactly as before. */
+  function enhanceVariations(form) {
+    if (form.getAttribute('data-prd-enhanced')) return;
+    var marker = form.querySelector('.prd-variations');
+    var isJersey = marker && marker.getAttribute('data-jersey') === '1';
+    var variations = [];
+    try { variations = JSON.parse(form.getAttribute('data-product_variations') || '[]') || []; } catch (e) { variations = []; }
+    var selects = form.querySelectorAll('table.variations select');
+    if (!selects.length) return;
+    form.setAttribute('data-prd-enhanced', '1');
+    var single = selects.length === 1;
 
-    // Close on link click
-    mobileMenu.querySelectorAll('a').forEach(function (link) {
-      link.addEventListener('click', function () {
-        mobileMenu.classList.remove('open');
-        menuToggle.setAttribute('aria-expanded', 'false');
-        mobileMenu.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
-      });
-    });
-  }
+    selects.forEach(function (select) {
+      var name = select.getAttribute('data-attribute_name') || select.name;
+      var opts = Array.prototype.filter.call(select.options, function (o) { return o.value !== ''; });
+      if (!opts.length || opts.length > 12) return;
 
-  // ── Scent pills ──
-  var pills = document.querySelectorAll('.scent-pill');
-  pills.forEach(function (pill) {
-    pill.addEventListener('click', function () {
-      var group = pill.closest('.scent-selector');
-      if (group) {
-        group.querySelectorAll('.scent-pill').forEach(function (p) {
-          p.classList.remove('active');
+      var group = document.createElement('div');
+      group.className = 'prd-opts';
+      group.setAttribute('role', 'group');
+      var label = form.querySelector('label[for="' + select.id + '"]');
+      if (label) group.setAttribute('aria-label', label.textContent.trim());
+
+      opts.forEach(function (o) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'prd-opt';
+        b.setAttribute('data-value', o.value);
+        b.setAttribute('aria-pressed', 'false');
+        var main = document.createElement('span');
+        main.textContent = o.text;
+        b.appendChild(main);
+
+        if (single && variations.length) {
+          var v = variations.filter(function (x) { var a = x.attributes || {}; return a[name] === o.value || a[name] === ''; })[0];
+          if (v) {
+            var qty = parseInt(v.max_qty, 10);
+            if (!v.is_in_stock) {
+              b.disabled = true;
+              b.classList.add('is-out');
+              b.setAttribute('aria-label', o.text + ', sold out');
+            } else if (isJersey && qty > 0 && qty <= 3) {
+              var left = document.createElement('small');
+              left.textContent = qty + ' left';
+              b.appendChild(left);
+              b.setAttribute('aria-label', o.text + ', ' + qty + ' left');
+            }
+          }
+        }
+        b.addEventListener('click', function () {
+          select.value = (select.value === o.value) ? '' : o.value;
+          if (window.jQuery) window.jQuery(select).trigger('change');
+          else select.dispatchEvent(new Event('change', { bubbles: true }));
+          sync();
         });
-      }
-      pill.classList.add('active');
+        group.appendChild(b);
+      });
 
-      // Update add-to-cart link if present
-      var scent = pill.getAttribute('data-scent');
-      var cartLink = document.querySelector('.spotlight-body .btn-primary');
-      if (cartLink && scent) {
-        var base = cartLink.href.split('?')[0];
-        cartLink.href = base + '?attribute_scents=' + encodeURIComponent(scent);
+      function sync() {
+        group.querySelectorAll('.prd-opt').forEach(function (b) {
+          b.setAttribute('aria-pressed', b.getAttribute('data-value') === select.value ? 'true' : 'false');
+        });
+        updateWhatsApp();
       }
+      select.addEventListener('change', sync);
+      if (window.jQuery) window.jQuery(form).on('reset_data woocommerce_update_variation_values', sync);
+
+      select.classList.add('prd-visually-hidden');
+      select.setAttribute('tabindex', '-1');
+      select.setAttribute('aria-hidden', 'true');
+      select.parentNode.insertBefore(group, select);
+      sync();
     });
-  });
 
-  // ── Product image hover ──
-  document.querySelectorAll('.woo-products-grid a img, .collection-item img').forEach(function (img) {
-    var parent = img.closest('a, .collection-item');
-    if (!parent) return;
-    parent.addEventListener('mouseenter', function () { img.style.transform = 'scale(1.04)'; });
-    parent.addEventListener('mouseleave', function () { img.style.transform = 'scale(1)'; });
-  });
+    function updateWhatsApp() {
+      var wa = document.querySelector('.prd-btn-wa[data-wa-base]');
+      if (!wa) return;
+      var chosen = [];
+      selects.forEach(function (s) { if (s.value) chosen.push(s.value); });
+      var product = wa.getAttribute('data-product') || 'jersey';
+      var text = 'Hi PRDRWNDN! I’d like the ' + product + (chosen.length ? ' in ' + (isJersey ? 'size ' : '') + chosen.join(', ') : '') + '.';
+      wa.href = 'https://wa.me/' + wa.getAttribute('data-wa-base') + '?text=' + encodeURIComponent(text);
+    }
+  }
+  document.querySelectorAll('form.variations_form').forEach(enhanceVariations);
 
-  // ── Live cart count update ──
-  function updateCartCount() {
+  /* ── Live cart count ── */
+  window.prdUpdateCartCount = function () {
     if (typeof prdrwndn === 'undefined') return;
-    fetch(prdrwndn.ajaxUrl + '?action=prdrwndn_cart_count')
+    fetch(prdrwndn.ajaxUrl + '?action=prdrwndn_cart_count', { credentials: 'same-origin' })
       .then(function (r) { return r.text(); })
       .then(function (count) {
-        var badge = document.querySelector('.cart-count');
-        var n = parseInt(count, 10);
-        if (badge) {
+        var n = parseInt(count, 10) || 0;
+        document.querySelectorAll('.prd-cart-count').forEach(function (badge) {
           badge.textContent = n;
-          badge.style.display = n > 0 ? 'flex' : 'none';
-        }
+          badge.hidden = n < 1;
+        });
+        var cartBtn = document.querySelector('.prd-cart-btn');
+        if (cartBtn) cartBtn.setAttribute('aria-label', 'Cart, ' + n + ' items');
       })
       .catch(function () {});
-  }
-
-  // Update cart count on page load
-  updateCartCount();
-
-  // ── Smooth anchor scrolls ──
-  document.querySelectorAll('a[href^="#"]').forEach(function (a) {
-    a.addEventListener('click', function (e) {
-      var target = document.querySelector(a.getAttribute('href'));
-      if (target) {
-        e.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth' });
-      }
-    });
-  });
-
+  };
 })();

@@ -14,13 +14,15 @@
  *  TABLE OF CONTENTS
  *  1. Theme Setup          — supports, menus, image sizes
  *  2. Enqueue Assets       — CSS and JS files
- *  3. WooCommerce          — wrappers, overrides
+ *  3. WooCommerce          — wrappers, shop settings
  *  4. Widget Areas         — sidebar registration
  *  5. Customizer           — live preview settings
  *  6. Helper Functions     — reusable template helpers
- *  7. PWA                  — manifest + service worker
- *  8. AJAX                 — cart count endpoint
- *  9. Gutenberg            — disable on custom templates
+ *  7. Jerseys              — 2-for-$80 deal, product page extras, cart add-on
+ *  8. PWA                  — manifest + service worker
+ *  9. AJAX                 — cart count endpoint
+ * 10. Gutenberg            — disable on custom templates
+ * 11. GitHub auto-updater, shop template, newsletter
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Security: block direct file access
@@ -28,25 +30,17 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Security: block direct file access
 
 /* ════════════════════════════════════════════════════
    1. THEME SETUP
-   Registers everything WordPress needs to know about
-   this theme — features it supports, menu locations,
-   and image sizes.
 ════════════════════════════════════════════════════ */
 function prdrwndn_setup() {
-
-    // Allow WordPress to manage the <title> tag automatically
     add_theme_support( 'title-tag' );
-
-    // Enable featured images (thumbnails) on posts and pages
     add_theme_support( 'post-thumbnails' );
-
-    // Use modern HTML5 markup for forms, galleries, etc.
     add_theme_support( 'html5', [
         'search-form', 'comment-form', 'comment-list',
         'gallery', 'caption', 'style', 'script'
     ] );
 
-    // Allow a custom logo to be uploaded via Appearance → Customize → Site Identity
+    // Logo: Appearance → Customize → Site Identity.
+    // The header shows it dark on the light background; the footer shows it light.
     add_theme_support( 'custom-logo', [
         'height'      => 60,
         'width'       => 200,
@@ -54,22 +48,17 @@ function prdrwndn_setup() {
         'flex-height' => true,
     ] );
 
-    // Tell WordPress this theme supports WooCommerce
     add_theme_support( 'woocommerce' );
-    add_theme_support( 'wc-product-gallery-zoom' );      // pinch-to-zoom on product images
-    add_theme_support( 'wc-product-gallery-lightbox' );  // lightbox on product images
-    add_theme_support( 'wc-product-gallery-slider' );    // swipe gallery on product page
+    add_theme_support( 'wc-product-gallery-zoom' );
+    add_theme_support( 'wc-product-gallery-lightbox' );
+    add_theme_support( 'wc-product-gallery-slider' );
 
-    // Register navigation menu locations
-    // You assign actual menus to these in Appearance → Menus
     register_nav_menus( [
         'primary' => __( 'Primary Navigation (desktop header)', 'prdrwndn' ),
         'mobile'  => __( 'Mobile Navigation (hamburger menu)', 'prdrwndn' ),
         'footer'  => __( 'Footer Navigation', 'prdrwndn' ),
     ] );
 
-    // Register an extra image size for product cards
-    // Width × Height, true = hard crop (not proportional)
     add_image_size( 'prdrwndn-card', 600, 600, true );
     add_image_size( 'prdrwndn-hero', 1400, 900, true );
 }
@@ -78,106 +67,119 @@ add_action( 'after_setup_theme', 'prdrwndn_setup' );
 
 /* ════════════════════════════════════════════════════
    2. ENQUEUE ASSETS
-   Loads all CSS and JavaScript files.
-   Files load in this order:
-   1. Google Fonts (external CDN)
-   2. Parent theme stylesheet (style.css)
-   3. Main JavaScript (assets/js/main.js)
-   4. Shop JavaScript (only on WooCommerce pages)
+   1. Site stylesheet (assets/css/site.css) — always from this parent theme.
+   2. Child theme stylesheet — loads after, so child overrides still win.
+   3. Main JavaScript, then Shop JavaScript on WooCommerce pages.
+   Fonts are self-hosted in assets/fonts (no Google Fonts request).
 ════════════════════════════════════════════════════ */
 function prdrwndn_assets() {
-    // Theme version — change this in style.css to bust browser cache
-    $v = wp_get_theme()->get( 'Version' );
+    $v = wp_get_theme( get_template() )->get( 'Version' );
 
-    // Google Fonts — Bebas Neue (display), Cormorant Garamond (serif), Inter (body)
-    // To change fonts: replace this URL with a new one from fonts.google.com
+    // Site stylesheet first (priority 5), so a child theme's stylesheet
+    // (enqueued by the child at the default priority 10) loads after it and wins.
     wp_enqueue_style(
-        'prdrwndn-fonts',
-        'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500;600;700&display=swap',
+        'prdrwndn-site',
+        get_template_directory_uri() . '/assets/css/site.css',
         [],
-        null // null = no version (Google handles cache)
-    );
-
-    // Main stylesheet — all the theme's CSS
-    wp_enqueue_style(
-        'prdrwndn-style',
-        get_stylesheet_uri(),
-        [ 'prdrwndn-fonts' ], // loads after fonts
         $v
     );
 
-    // Main JS — scroll reveal, mobile menu, header scroll, scent pills
     wp_enqueue_script(
         'prdrwndn-main',
         get_template_directory_uri() . '/assets/js/main.js',
-        [], // no dependencies
+        [],
         $v,
-        true // load in footer (better performance)
+        true
     );
 
-    // Shop JS — only loads on WooCommerce pages (shop, product, cart, checkout)
-    // Handles live cart count updates after adding to cart
     if ( class_exists( 'WooCommerce' ) &&
          ( is_shop() || is_product() || is_product_category() || is_cart() || is_checkout() )
     ) {
         wp_enqueue_script(
             'prdrwndn-shop',
             get_template_directory_uri() . '/assets/js/shop.js',
-            [ 'jquery' ], // needs jQuery (WooCommerce provides it)
+            [ 'jquery' ],
             $v,
             true
         );
     }
 
-    // Pass PHP data to JavaScript so JS can use WordPress URLs
-    // Access these in JS as: prdrwndn.ajaxUrl, prdrwndn.cartUrl, etc.
     wp_localize_script( 'prdrwndn-main', 'prdrwndn', [
-        'ajaxUrl' => admin_url( 'admin-ajax.php' ),  // WordPress AJAX endpoint
-        'nonce'   => wp_create_nonce( 'prdrwndn_nonce' ), // security token
-        'cartUrl' => class_exists('WooCommerce') ? wc_get_cart_url() : home_url('/cart/'),
-        'appUrl'  => home_url( '/app.html' ),
-        'siteUrl' => home_url(),
+        'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+        'nonce'    => wp_create_nonce( 'prdrwndn_nonce' ),
+        'cartUrl'  => class_exists( 'WooCommerce' ) ? wc_get_cart_url() : home_url( '/cart/' ),
+        'appUrl'   => home_url( '/app.html' ),
+        'siteUrl'  => home_url(),
+        'whatsapp' => prdrwndn_whatsapp_number(),
     ] );
 }
-add_action( 'wp_enqueue_scripts', 'prdrwndn_assets' );
+add_action( 'wp_enqueue_scripts', 'prdrwndn_assets', 5 );
+
+/**
+ * Child theme stylesheet: the PRDRWNDN® Child theme enqueues its own style.css
+ * (handle "prdrwndn-child-style"). If a different child theme is active that
+ * doesn't, load its style.css here so its overrides still apply.
+ */
+add_action( 'wp_enqueue_scripts', function () {
+    if ( get_stylesheet() === get_template() ) return;
+    if ( wp_style_is( 'prdrwndn-child-style', 'enqueued' ) ) return;
+    wp_enqueue_style( 'prdrwndn-child', get_stylesheet_uri(), [ 'prdrwndn-site' ], wp_get_theme()->get( 'Version' ) );
+}, 20 );
+
+/**
+ * The old theme loaded the stylesheet under the handle "prdrwndn-style".
+ * If a child theme still enqueues the parent style.css, that file is now only
+ * a header comment, so it's harmless. Nothing to dequeue.
+ */
+
+// Preload the two fonts used above the fold
+add_action( 'wp_head', function () {
+    $base = get_template_directory_uri() . '/assets/fonts/';
+    echo '<link rel="preload" href="' . esc_url( $base . 'bebas-neue-latin-400-normal.woff2' ) . '" as="font" type="font/woff2" crossorigin>' . "\n";
+    echo '<link rel="preload" href="' . esc_url( $base . 'inter-latin-wght-normal.woff2' ) . '" as="font" type="font/woff2" crossorigin>' . "\n";
+}, 2 );
+
+// Body class used to scope the light design
+add_filter( 'body_class', function ( $classes ) {
+    $classes[] = 'prd';
+    return $classes;
+} );
 
 
 /* ════════════════════════════════════════════════════
    3. WOOCOMMERCE WRAPPERS
-   WooCommerce wraps its output in a default container.
-   We remove the default one and replace it with ours
-   so the shop pages use our theme's layout.
 ════════════════════════════════════════════════════ */
-
-// Remove WooCommerce's default content wrappers
 remove_action( 'woocommerce_before_main_content', 'woocommerce_output_content_wrapper', 10 );
 remove_action( 'woocommerce_after_main_content',  'woocommerce_output_content_wrapper_end', 10 );
+remove_action( 'woocommerce_before_main_content', 'woocommerce_breadcrumb', 20 );
 
-// Add our own wrappers instead
 add_action( 'woocommerce_before_main_content', function() {
-    echo '<div class="woocommerce-content-wrap container"><div class="woo-main">';
+    echo '<div class="prd-woo">';
 } );
 add_action( 'woocommerce_after_main_content', function() {
-    echo '</div></div>';
+    echo '</div>';
 } );
 
-// Style WooCommerce breadcrumbs separator to match our theme
 add_filter( 'woocommerce_breadcrumb_defaults', function( $defaults ) {
-    $defaults['delimiter'] = ' &rsaquo; '; // › separator
+    $defaults['delimiter'] = ' <span aria-hidden="true">/</span> ';
     return $defaults;
 } );
 
-// Set the number of products shown per page on the shop
-// Change the number 8 to however many you want
+// Products per page on the shop
 add_filter( 'loop_shop_per_page', function() {
-    return 8;
+    return 24;
+} );
+
+// Related products: 4 in a row
+add_filter( 'woocommerce_output_related_products_args', function ( $args ) {
+    $args['posts_per_page'] = 4;
+    $args['columns']        = 4;
+    return $args;
 } );
 
 
 /* ════════════════════════════════════════════════════
    4. WIDGET AREAS
-   Registers sidebar/widget areas you can fill in
-   Appearance → Widgets.
 ════════════════════════════════════════════════════ */
 function prdrwndn_widgets_init() {
     register_sidebar( [
@@ -194,294 +196,525 @@ add_action( 'widgets_init', 'prdrwndn_widgets_init' );
 
 
 /* ════════════════════════════════════════════════════
-   5. CUSTOMIZER
-   All settings available in Appearance → Customize.
-   Everything here can be changed live without editing
-   any code files.
+   5. CUSTOMIZER  (Appearance → Customize → PRDRWNDN® Theme)
 
-   Structure:
-   Panel "PRDRWNDN® Theme"
-   ├── Section: Branding      (tagline)
-   ├── Section: Colors        (green, forest, cream, ink)
-   ├── Section: Homepage      (hero text, product IDs, counts)
-   └── Section: Footer        (footer description text)
+   ├── Branding        tagline
+   ├── Colors          green, forest, cream
+   ├── Homepage        hero text, freshener product
+   ├── Jerseys & deals jersey category, 2-for-$80 deal, size chart, pickup note
+   ├── Contact         WhatsApp number, announcement bar
+   └── Footer          footer description
 ════════════════════════════════════════════════════ */
-function prdrwndn_customizer( $wp_customize ) {
 
-    // ── Create the main panel that groups all our sections ──
+/** Defaults for every setting, in one place. */
+function prdrwndn_defaults() {
+    return [
+        'prdrwndn_tagline'        => 'A contemporary cultural brand rooted in memory, place and pride.',
+        'prdrwndn_green'          => '#20AA54',
+        'prdrwndn_forest'         => '#1E3B2F',
+        'prdrwndn_cream'          => '#E8E2D5',
+        'prdrwndn_freshener_id'   => '',
+        'prd_hero_eyebrow'        => 'Jersey Drop 01 · In stock now',
+        'prd_hero_title'          => 'Wear home.',
+        'prd_hero_text'           => 'Two football jerseys drawn from Rwanda: the sun from our flag, and the Imigongo art of the east.',
+        'prd_jersey_cat'          => 'jerseys',
+        'prd_fresh_cat'           => 'car-fresheners',
+        'prd_flag_cat'            => 'flag',
+        'prd_tee_cat'             => 'tshirts',
+        'prd_deal_on'             => true,
+        'prd_deal_price'          => 80,
+        'prd_size_chart'          => '',
+        'prd_pickup_on'           => false,
+        'prd_pickup_text'         => 'Free pickup in Phoenix, AZ',
+        'prd_whatsapp'            => '+1 480 382 7077',
+        'prd_announce'            => '2 jerseys for $80 · Ships from Phoenix, AZ',
+        'prdrwndn_footer_desc'    => 'Rwanda-heritage goods: football jerseys, map-shaped car fresheners, flags and apparel — for the global Rwandan community.',
+    ];
+}
+
+/** Get a theme setting with its default. */
+function prd_mod( $key ) {
+    $d = prdrwndn_defaults();
+    return get_theme_mod( $key, $d[ $key ] ?? '' );
+}
+
+function prdrwndn_customizer( $wp_customize ) {
+    $d = prdrwndn_defaults();
+
     $wp_customize->add_panel( 'prdrwndn_panel', [
         'title'       => __( 'PRDRWNDN® Theme', 'prdrwndn' ),
-        'description' => __( 'Customize your PRDRWNDN® store appearance.', 'prdrwndn' ),
+        'description' => __( 'Customize your PRDRWNDN® store.', 'prdrwndn' ),
         'priority'    => 10,
     ] );
 
-    /* ── SECTION: Branding ── */
-    $wp_customize->add_section( 'prdrwndn_branding', [
-        'title'       => __( 'Branding', 'prdrwndn' ),
-        'description' => __( 'Core brand messaging shown across the site.', 'prdrwndn' ),
-        'panel'       => 'prdrwndn_panel',
-    ] );
+    $add = function ( $section, $id, $label, $type = 'text', $sanitize = 'sanitize_text_field', $desc = '' ) use ( $wp_customize, $d ) {
+        $wp_customize->add_setting( $id, [ 'default' => $d[ $id ] ?? '', 'sanitize_callback' => $sanitize ] );
+        $wp_customize->add_control( $id, [ 'label' => $label, 'description' => $desc, 'section' => $section, 'type' => $type ] );
+    };
 
-    // Hero tagline — the sentence below the main headline
-    $wp_customize->add_setting( 'prdrwndn_tagline', [
-        'default'           => 'A contemporary cultural brand rooted in memory, place and pride.',
-        'sanitize_callback' => 'sanitize_textarea_field',
-        'transport'         => 'postMessage', // updates live without page reload
-    ] );
-    $wp_customize->add_control( 'prdrwndn_tagline', [
-        'label'       => __( 'Hero Tagline', 'prdrwndn' ),
-        'description' => __( 'Short brand sentence shown below the hero headline.', 'prdrwndn' ),
-        'section'     => 'prdrwndn_branding',
-        'type'        => 'textarea',
-    ] );
+    /* Branding */
+    $wp_customize->add_section( 'prdrwndn_branding', [ 'title' => __( 'Branding', 'prdrwndn' ), 'panel' => 'prdrwndn_panel' ] );
+    $add( 'prdrwndn_branding', 'prdrwndn_tagline', 'Brand sentence (About page)', 'textarea', 'sanitize_textarea_field' );
 
-
-    /* ── SECTION: Colors ──
-       Each color updates a CSS variable across the whole site.
-       Use any valid hex color, e.g. #20AA54               */
+    /* Colors */
     $wp_customize->add_section( 'prdrwndn_colors', [
         'title'       => __( 'Colors', 'prdrwndn' ),
-        'description' => __( 'Change brand colors. Updates apply site-wide.', 'prdrwndn' ),
+        'description' => __( 'The page background stays light cream; these set the brand accents.', 'prdrwndn' ),
         'panel'       => 'prdrwndn_panel',
     ] );
-
-    // Define each color setting — id, default hex, label, description
-    $color_settings = [
-        'prdrwndn_green'  => [
-            'default' => '#20AA54',
-            'label'   => 'Brand Green',
-            'desc'    => 'Main green — buttons, accents, links, price labels.',
-        ],
-        'prdrwndn_forest' => [
-            'default' => '#1E3B2F',
-            'label'   => 'Forest Green',
-            'desc'    => 'Deep green used in hero, editorial, and footer backgrounds.',
-        ],
-        'prdrwndn_cream'  => [
-            'default' => '#E8E2D5',
-            'label'   => 'Cream',
-            'desc'    => 'Warm off-white used for headings and logo text.',
-        ],
-        'prdrwndn_ink'    => [
-            'default' => '#080808',
-            'label'   => 'Background Ink',
-            'desc'    => 'Main page background color. Keep dark for brand consistency.',
-        ],
+    $colors = [
+        'prdrwndn_green'  => [ 'Brand Green', 'Badges, links and small accents.' ],
+        'prdrwndn_forest' => [ 'Forest Green', 'Buttons, the top bar, the story band and the footer.' ],
+        'prdrwndn_cream'  => [ 'Sand', 'Behind product photos and in soft panels.' ],
     ];
-
-    foreach ( $color_settings as $id => $args ) {
-        $wp_customize->add_setting( $id, [
-            'default'           => $args['default'],
-            'sanitize_callback' => 'sanitize_hex_color',
-            'transport'         => 'postMessage',
-        ] );
-        $wp_customize->add_control(
-            new WP_Customize_Color_Control( $wp_customize, $id, [
-                'label'       => __( $args['label'], 'prdrwndn' ),
-                'description' => __( $args['desc'], 'prdrwndn' ),
-                'section'     => 'prdrwndn_colors',
-            ] )
-        );
+    foreach ( $colors as $id => $c ) {
+        $wp_customize->add_setting( $id, [ 'default' => $d[ $id ], 'sanitize_callback' => 'sanitize_hex_color' ] );
+        $wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $id, [
+            'label' => $c[0], 'description' => $c[1], 'section' => 'prdrwndn_colors',
+        ] ) );
     }
 
+    /* Homepage */
+    $wp_customize->add_section( 'prdrwndn_homepage', [ 'title' => __( 'Homepage', 'prdrwndn' ), 'panel' => 'prdrwndn_panel' ] );
+    $add( 'prdrwndn_homepage', 'prd_hero_eyebrow', 'Hero — small line above the headline' );
+    $add( 'prdrwndn_homepage', 'prd_hero_title', 'Hero — headline' );
+    $add( 'prdrwndn_homepage', 'prd_hero_text', 'Hero — text', 'textarea', 'sanitize_textarea_field' );
+    $add( 'prdrwndn_homepage', 'prdrwndn_freshener_id', 'Car freshener — Product ID', 'number', 'absint',
+        'The freshener shown on the homepage and offered as a $5 add-on. Leave empty to use the first product named "freshener".' );
 
-    /* ── SECTION: Homepage ──
-       Controls text and product selection on the homepage. */
-    $wp_customize->add_section( 'prdrwndn_homepage', [
-        'title'       => __( 'Homepage', 'prdrwndn' ),
-        'description' => __( 'Control the homepage hero text and which products appear.', 'prdrwndn' ),
-        'panel'       => 'prdrwndn_panel',
-    ] );
+    /* Jerseys & deals */
+    $wp_customize->add_section( 'prd_jerseys', [ 'title' => __( 'Jerseys & deals', 'prdrwndn' ), 'panel' => 'prdrwndn_panel' ] );
+    $add( 'prd_jerseys', 'prd_jersey_cat', 'Jersey category slug', 'text', 'sanitize_title', 'Products in this category get the size buttons, the deal and the WhatsApp order button.' );
+    $add( 'prd_jerseys', 'prd_fresh_cat', 'Car freshener category slug', 'text', 'sanitize_title' );
+    $add( 'prd_jerseys', 'prd_flag_cat', 'Flag category slug', 'text', 'sanitize_title' );
+    $add( 'prd_jerseys', 'prd_tee_cat', 'T-shirt category slug', 'text', 'sanitize_title' );
+    $add( 'prd_jerseys', 'prd_deal_on', 'Turn on the 2-jersey deal', 'checkbox', 'prdrwndn_sanitize_checkbox' );
+    $add( 'prd_jerseys', 'prd_deal_price', 'Deal price for 2 jerseys ($)', 'number', 'absint', 'Any two jerseys in the cart cost this together. The discount shows as a line in the cart.' );
+    $add( 'prd_jerseys', 'prd_size_chart', 'Size chart', 'textarea', 'sanitize_textarea_field',
+        'One row per line, columns split with |. First line is the header. Example: Size | Chest (in) | Length (in)' );
+    $add( 'prd_jerseys', 'prd_pickup_on', 'Show the local pickup note', 'checkbox', 'prdrwndn_sanitize_checkbox', 'Only turn this on once Local pickup is set up in WooCommerce → Settings → Shipping.' );
+    $add( 'prd_jerseys', 'prd_pickup_text', 'Local pickup note' );
 
-    // Hero headline — line 1 (white text)
-    $wp_customize->add_setting( 'prdrwndn_hero_line1', [
-        'default'           => 'YOUR ROOTS.',
-        'sanitize_callback' => 'sanitize_text_field',
-        'transport'         => 'postMessage',
-    ] );
-    $wp_customize->add_control( 'prdrwndn_hero_line1', [
-        'label'       => __( 'Hero Headline — Line 1', 'prdrwndn' ),
-        'description' => __( 'First line of the big hero headline (cream/white).', 'prdrwndn' ),
-        'section'     => 'prdrwndn_homepage',
-    ] );
+    /* Contact */
+    $wp_customize->add_section( 'prd_contact', [ 'title' => __( 'Contact & top bar', 'prdrwndn' ), 'panel' => 'prdrwndn_panel' ] );
+    $add( 'prd_contact', 'prd_whatsapp', 'WhatsApp number', 'text', 'sanitize_text_field', 'With country code, e.g. +1 480 382 7077. Used for every "Order on WhatsApp" button.' );
+    $add( 'prd_contact', 'prd_announce', 'Top bar message', 'text', 'sanitize_text_field', 'Leave empty to hide the top bar.' );
 
-    // Hero headline — line 2 (green accent text)
-    $wp_customize->add_setting( 'prdrwndn_hero_line2', [
-        'default'           => 'YOUR HOME.',
-        'sanitize_callback' => 'sanitize_text_field',
-        'transport'         => 'postMessage',
-    ] );
-    $wp_customize->add_control( 'prdrwndn_hero_line2', [
-        'label'       => __( 'Hero Headline — Line 2 (green accent)', 'prdrwndn' ),
-        'description' => __( 'Second line shown in brand green color.', 'prdrwndn' ),
-        'section'     => 'prdrwndn_homepage',
-    ] );
-
-    // Featured freshener product ID
-    // To find a product ID: go to Products → hover product → see ?post=NUMBER in URL
-    $wp_customize->add_setting( 'prdrwndn_freshener_id', [
-        'default'           => '',
-        'sanitize_callback' => 'absint', // ensures it's a whole number
-    ] );
-    $wp_customize->add_control( 'prdrwndn_freshener_id', [
-        'label'       => __( 'Featured Freshener — Product ID', 'prdrwndn' ),
-        'description' => __( 'Enter the WooCommerce product ID for the car freshener spotlight. Find it in Products → hover the product → look for "post=NUMBER" in the URL.', 'prdrwndn' ),
-        'section'     => 'prdrwndn_homepage',
-        'type'        => 'number',
-    ] );
-
-    // How many secondary products to show below the freshener spotlight
-    $wp_customize->add_setting( 'prdrwndn_products_count', [
-        'default'           => '4',
-        'sanitize_callback' => 'absint',
-    ] );
-    $wp_customize->add_control( 'prdrwndn_products_count', [
-        'label'       => __( 'Number of Secondary Products', 'prdrwndn' ),
-        'description' => __( 'How many products to show in the "Home Collection" grid below the freshener spotlight.', 'prdrwndn' ),
-        'section'     => 'prdrwndn_homepage',
-        'type'        => 'number',
-    ] );
-
-
-    /* ── SECTION: Footer ── */
-    $wp_customize->add_section( 'prdrwndn_footer', [
-        'title'       => __( 'Footer', 'prdrwndn' ),
-        'description' => __( 'Customize the footer brand description.', 'prdrwndn' ),
-        'panel'       => 'prdrwndn_panel',
-    ] );
-
-    // Footer brand description — the paragraph under the logo in the footer
-    $wp_customize->add_setting( 'prdrwndn_footer_desc', [
-        'default'           => 'Shop your roots. Rwanda map-shaped car fresheners, heritage apparel, and cultural pride — for the global Rwandan community.',
-        'sanitize_callback' => 'sanitize_textarea_field',
-        'transport'         => 'postMessage',
-    ] );
-    $wp_customize->add_control( 'prdrwndn_footer_desc', [
-        'label'       => __( 'Footer Brand Description', 'prdrwndn' ),
-        'description' => __( 'Short paragraph shown under the PRDRWNDN® logo in the footer.', 'prdrwndn' ),
-        'section'     => 'prdrwndn_footer',
-        'type'        => 'textarea',
-    ] );
+    /* Footer */
+    $wp_customize->add_section( 'prdrwndn_footer', [ 'title' => __( 'Footer', 'prdrwndn' ), 'panel' => 'prdrwndn_panel' ] );
+    $add( 'prdrwndn_footer', 'prdrwndn_footer_desc', 'Footer brand description', 'textarea', 'sanitize_textarea_field' );
 }
 add_action( 'customize_register', 'prdrwndn_customizer' );
 
-
-/**
- * Output customizer color choices as CSS variables.
- * This runs on every page load and injects a <style> tag
- * with the colors the user picked in the Customizer.
- */
-function prdrwndn_customizer_css() {
-    $green  = get_theme_mod( 'prdrwndn_green',  '#20AA54' );
-    $forest = get_theme_mod( 'prdrwndn_forest', '#1E3B2F' );
-    $cream  = get_theme_mod( 'prdrwndn_cream',  '#E8E2D5' );
-    $ink    = get_theme_mod( 'prdrwndn_ink',    '#080808' );
-    echo "<style id='prdrwndn-customizer-vars'>:root {
-        --rw-green:  {$green};
-        --rw-green3: {$forest};
-        --rw-cream:  {$cream};
-        --ink:       {$ink};
-    }</style>";
+function prdrwndn_sanitize_checkbox( $v ) {
+    return ! empty( $v );
 }
-add_action( 'wp_head', 'prdrwndn_customizer_css' );
+
+/** Output the Customizer colors as CSS variables. */
+function prdrwndn_customizer_css() {
+    $green  = sanitize_hex_color( prd_mod( 'prdrwndn_green' ) ) ?: '#20AA54';
+    $forest = sanitize_hex_color( prd_mod( 'prdrwndn_forest' ) ) ?: '#1E3B2F';
+    $cream  = sanitize_hex_color( prd_mod( 'prdrwndn_cream' ) ) ?: '#E8E2D5';
+    echo "<style id='prdrwndn-customizer-vars'>:root{--prd-green:{$green};--prd-forest:{$forest};--prd-sand:{$cream};}</style>\n";
+}
+add_action( 'wp_head', 'prdrwndn_customizer_css', 30 );
 
 
 /* ════════════════════════════════════════════════════
    6. HELPER FUNCTIONS
-   Small reusable functions called from template files.
-   You can call these anywhere in a PHP template file.
 ════════════════════════════════════════════════════ */
 
 /**
  * Get the featured car freshener product.
+ * Uses the Customizer Product ID, or the first product named "freshener"
+ * that isn't a bundle.
  *
- * First checks the Customizer setting (Freshener Product ID).
- * If not set, falls back to searching for a product with
- * "freshener" in the name.
- *
- * @return WC_Product|null  The product object, or null if not found.
+ * @return WC_Product|null
  */
 function prdrwndn_get_freshener() {
-    $id = (int) get_theme_mod( 'prdrwndn_freshener_id', 0 );
-
-    // Use the specific product ID if set in Customizer
+    if ( ! function_exists( 'wc_get_product' ) ) return null;
+    $id = (int) prd_mod( 'prdrwndn_freshener_id' );
     if ( $id > 0 ) {
-        return wc_get_product( $id );
+        $p = wc_get_product( $id );
+        if ( $p ) return $p;
     }
-
-    // Fallback: find any product with "freshener" in its name
-    $query = new WP_Query( [
+    $ids = get_posts( [
         'post_type'      => 'product',
-        'posts_per_page' => 1,
+        'posts_per_page' => 5,
         's'              => 'freshener',
         'post_status'    => 'publish',
+        'fields'         => 'ids',
+        'orderby'        => 'date',
+        'order'          => 'ASC',
     ] );
-    if ( $query->have_posts() ) {
-        $query->the_post();
-        $product = wc_get_product( get_the_ID() );
-        wp_reset_postdata();
-        return $product;
+    foreach ( $ids as $pid ) {
+        $p = wc_get_product( $pid );
+        if ( $p && $p->is_type( 'variable' ) ) return $p; // the main one has scents
     }
-
-    return null; // No freshener found
+    return $ids ? wc_get_product( $ids[0] ) : null;
 }
 
-
-/**
- * Render the Rwanda flag stripe (green / yellow / blue bar).
- * Call this in any template: <?php prdrwndn_flag_stripe(); ?>
- *
- * @param string $class  Optional extra CSS class.
- */
+/** Rwanda flag stripe (green / yellow / blue). */
 function prdrwndn_flag_stripe( $class = '' ) {
     $class = $class ? ' ' . esc_attr( $class ) : '';
-    echo '<div class="flag-stripe' . $class . '" aria-hidden="true"></div>';
+    echo '<div class="prd-flag' . $class . '" aria-hidden="true"><span></span><span></span><span></span></div>';
 }
 
+/** Imigongo triangle band. */
+function prdrwndn_imigongo( $class = '' ) {
+    $class = $class ? ' ' . esc_attr( $class ) : '';
+    echo '<div class="prd-imigongo' . $class . '" aria-hidden="true"></div>';
+}
 
-/**
- * Return a string of filled star characters.
- * Used for review star ratings.
- *
- * @param  int    $count  Number of stars (default 5).
- * @return string         e.g. "★★★★★"
- */
 function prdrwndn_stars( $count = 5 ) {
     return str_repeat( '★', max( 0, min( 5, (int) $count ) ) );
 }
 
+/** WhatsApp number as digits only (for wa.me links). */
+function prdrwndn_whatsapp_number() {
+    return preg_replace( '/\D+/', '', (string) prd_mod( 'prd_whatsapp' ) );
+}
+
+/** wa.me link with an optional prefilled message. */
+function prdrwndn_whatsapp_url( $message = '' ) {
+    $n = prdrwndn_whatsapp_number();
+    if ( ! $n ) return '';
+    return 'https://wa.me/' . $n . ( $message !== '' ? '?text=' . rawurlencode( $message ) : '' );
+}
+
+/** Small inline icons. */
+function prdrwndn_icon( $name ) {
+    $icons = [
+        'cart'     => '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20.5 8H6.2"/><circle cx="9.5" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/></svg>',
+        'menu'     => '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+        'close'    => '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+        'arrow'    => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+        'whatsapp' => '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7a2.8 2.8 0 0 0 1.8-1.3 2.3 2.3 0 0 0 .2-1.3c-.1-.1-.2-.2-.5-.3z"/></svg>',
+        'pin'      => '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
+        'box'      => '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>',
+        'chat'     => '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+    ];
+    return $icons[ $name ] ?? '';
+}
+
+/** Category term object for a lane setting, or null. */
+function prdrwndn_cat( $setting ) {
+    $slug = prd_mod( $setting );
+    if ( ! $slug || ! taxonomy_exists( 'product_cat' ) ) return null;
+    $t = get_term_by( 'slug', $slug, 'product_cat' );
+    return ( $t && ! is_wp_error( $t ) ) ? $t : null;
+}
+
+/** Link for a category setting, falling back to the shop. */
+function prdrwndn_cat_url( $setting ) {
+    $t = prdrwndn_cat( $setting );
+    if ( $t ) {
+        $l = get_term_link( $t );
+        if ( ! is_wp_error( $l ) ) return $l;
+    }
+    return function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
+}
+
+/** Published products in a category (by setting), as WC_Product objects. */
+function prdrwndn_cat_products( $setting, $limit = 8 ) {
+    if ( ! function_exists( 'wc_get_products' ) ) return [];
+    $slug = prd_mod( $setting );
+    if ( ! $slug || ! prdrwndn_cat( $setting ) ) return [];
+    return wc_get_products( [
+        'status'   => 'publish',
+        'limit'    => $limit,
+        'category' => [ $slug ],
+        'orderby'  => 'menu_order',
+        'order'    => 'ASC',
+    ] );
+}
+
+/** Is this product a jersey? */
+function prdrwndn_is_jersey( $product_id ) {
+    $slug = prd_mod( 'prd_jersey_cat' );
+    if ( ! $slug ) return false;
+    $parent = wp_get_post_parent_id( $product_id );
+    $id = ( get_post_type( $product_id ) === 'product_variation' && $parent ) ? $parent : $product_id;
+    return has_term( $slug, 'product_cat', $id );
+}
+
+/**
+ * Sizes for a variable product, in order, with stock.
+ * @return array[] each: [ 'label' => 'M', 'stock' => 3|null, 'in' => bool ]
+ */
+function prdrwndn_sizes( $product ) {
+    if ( ! $product || ! $product->is_type( 'variable' ) ) return [];
+    $out = [];
+    foreach ( $product->get_children() as $vid ) {
+        $v = wc_get_product( $vid );
+        if ( ! $v || 'publish' !== $v->get_status() ) continue;
+        $label = '';
+        foreach ( $v->get_variation_attributes() as $k => $val ) {
+            if ( $val !== '' ) { $label = $val; break; }
+        }
+        if ( $label === '' ) continue;
+        $out[] = [
+            'label' => $label,
+            'stock' => $v->managing_stock() ? (int) $v->get_stock_quantity() : null,
+            'in'    => $v->is_in_stock(),
+        ];
+    }
+    return $out;
+}
+
+/** "Only 1 left in S" for the scarcest size, when 2 or fewer remain. */
+function prdrwndn_low_stock_note( $sizes ) {
+    $low = null;
+    foreach ( $sizes as $s ) {
+        if ( $s['in'] && $s['stock'] !== null && $s['stock'] > 0 && $s['stock'] <= 2 ) {
+            if ( ! $low || $s['stock'] < $low['stock'] ) $low = $s;
+        }
+    }
+    if ( ! $low ) return '';
+    return sprintf( 'Only %d left in %s', $low['stock'], $low['label'] );
+}
+
+/** Image URL for a product (main image or fallback). */
+function prdrwndn_product_img( $product, $size = 'woocommerce_single', $index = 0 ) {
+    if ( ! $product ) return '';
+    $ids = array_merge( [ $product->get_image_id() ], $product->get_gallery_image_ids() );
+    $ids = array_values( array_filter( $ids ) );
+    if ( isset( $ids[ $index ] ) ) return wp_get_attachment_image_url( $ids[ $index ], $size );
+    return '';
+}
+
+/** Theme fallback jersey images (used before the jersey products exist). */
+function prdrwndn_fallback_jerseys() {
+    $img = get_template_directory_uri() . '/assets/img/';
+    return [
+        [ 'name' => 'Izuba',    'front' => $img . 'izuba-front.webp',    'back' => $img . 'izuba-back.webp',    'meaning' => 'Kinyarwanda for “sun”' ],
+        [ 'name' => 'Imigongo', 'front' => $img . 'imigongo-front.webp', 'back' => $img . 'imigongo-back.webp', 'meaning' => 'The art of eastern Rwanda' ],
+    ];
+}
+
+/** The deal line, e.g. "2 for $80". */
+function prdrwndn_deal_label() {
+    return '2 for $' . (int) prd_mod( 'prd_deal_price' );
+}
+function prdrwndn_deal_on() {
+    return (bool) prd_mod( 'prd_deal_on' ) && (int) prd_mod( 'prd_deal_price' ) > 0;
+}
+
+/**
+ * One add-to-cart link per freshener scent.
+ * @param string $base URL to land on after adding (cart or current page).
+ * @return array[] each: [ 'label', 'url', 'price' ]
+ */
+function prdrwndn_freshener_links( $f, $base ) {
+    $items = [];
+    if ( ! $f || ! $f->is_purchasable() ) return $items;
+    if ( $f->is_type( 'variable' ) ) {
+        foreach ( $f->get_children() as $vid ) {
+            $v = wc_get_product( $vid );
+            if ( ! $v || ! $v->is_in_stock() || ! $v->is_purchasable() ) continue;
+            $attrs = $v->get_variation_attributes();
+            $label = implode( ' / ', array_filter( array_values( $attrs ) ) );
+            $args  = array_merge( [ 'add-to-cart' => $f->get_id(), 'variation_id' => $vid ], array_map( 'rawurlencode', $attrs ) );
+            $items[] = [ 'label' => $label, 'url' => add_query_arg( $args, $base ), 'price' => wc_get_price_to_display( $v ) ];
+        }
+    } elseif ( $f->is_in_stock() ) {
+        $items[] = [ 'label' => 'Add one', 'url' => add_query_arg( 'add-to-cart', $f->get_id(), $base ), 'price' => wc_get_price_to_display( $f ) ];
+    }
+    return $items;
+}
+
+/** Freshener add-on box: one button per scent, each adds that scent to the cart. */
+function prdrwndn_freshener_addon( $context = 'product' ) {
+    $f = prdrwndn_get_freshener();
+    if ( ! $f ) return;
+    $base  = ( $context === 'cart' ) ? wc_get_cart_url() : get_permalink();
+    $items = prdrwndn_freshener_links( $f, $base );
+    if ( ! $items ) return;
+    $price = $items[0]['price'];
+    $img = prdrwndn_product_img( $f, 'thumbnail' );
+    ?>
+    <div class="prd-addon">
+      <?php if ( $img ) : ?><img class="prd-addon-img" src="<?php echo esc_url( $img ); ?>" alt="" width="64" height="64" loading="lazy"/><?php endif; ?>
+      <div class="prd-addon-body">
+        <div class="prd-addon-title">Add a car freshener <span>$<?php echo esc_html( wc_format_decimal( $price, 0 ) ); ?></span></div>
+        <div class="prd-addon-sub">Rwanda map-shaped. Pick a scent:</div>
+        <div class="prd-addon-btns">
+          <?php foreach ( $items as $it ) : ?>
+            <a class="prd-chip-btn" href="<?php echo esc_url( $it['url'] ); ?>" rel="nofollow">+ <?php echo esc_html( $it['label'] ); ?></a>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    </div>
+    <?php
+}
+
 
 /* ════════════════════════════════════════════════════
-   7. PWA — PROGRESSIVE WEB APP
-   Adds the manifest link and service worker registration
-   to every page on the site so it can be installed
-   as a home screen app.
-
-   Required files in your WordPress root (public_html/):
-   - manifest.json       (already created)
-   - service-worker.js   (already created)
-   - app.html            (already created)
+   7. JERSEYS
 ════════════════════════════════════════════════════ */
 
 /**
- * Add PWA meta tags and manifest link to <head>.
- * This is what tells browsers the site is installable.
+ * 2-jersey deal: every pair of jerseys in the cart costs the deal price.
+ * Shows as a discount line ("Jersey deal: 2 for $80") in cart and checkout.
  */
+add_action( 'woocommerce_cart_calculate_fees', function ( $cart ) {
+    if ( is_admin() && ! wp_doing_ajax() ) return;
+    if ( ! prdrwndn_deal_on() ) return;
+    $deal   = (float) prd_mod( 'prd_deal_price' );
+    $prices = [];
+    foreach ( $cart->get_cart() as $item ) {
+        if ( empty( $item['data'] ) || ! prdrwndn_is_jersey( $item['product_id'] ) ) continue;
+        $unit = (float) $item['data']->get_price();
+        for ( $i = 0; $i < (int) $item['quantity']; $i++ ) $prices[] = $unit;
+    }
+    $pairs = intdiv( count( $prices ), 2 );
+    if ( $pairs < 1 ) return;
+    rsort( $prices );
+    $discount = array_sum( array_slice( $prices, 0, $pairs * 2 ) ) - $pairs * $deal;
+    if ( $discount <= 0 ) return;
+    $cart->add_fee( 'Jersey deal: ' . prdrwndn_deal_label(), -1 * round( $discount, 2 ), true );
+} );
+
+/** Count jersey units in the cart. */
+function prdrwndn_cart_jersey_count() {
+    if ( ! function_exists( 'WC' ) || ! WC()->cart ) return 0;
+    $n = 0;
+    foreach ( WC()->cart->get_cart() as $item ) {
+        if ( prdrwndn_is_jersey( $item['product_id'] ) ) $n += (int) $item['quantity'];
+    }
+    return $n;
+}
+
+/* ── Single product page ── */
+
+// Cleaner summary: no SKU/category meta
+remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_meta', 40 );
+
+// Eyebrow above the title
+add_action( 'woocommerce_single_product_summary', function () {
+    global $product;
+    if ( ! $product ) return;
+    $cats = wc_get_product_category_list( $product->get_id(), ', ' );
+    if ( prdrwndn_is_jersey( $product->get_id() ) ) {
+        echo '<div class="prd-eyebrow">Football jersey · PRDRWNDN®</div>';
+    } elseif ( $cats ) {
+        echo '<div class="prd-eyebrow">' . wp_kses_post( wp_strip_all_tags( $cats ) ) . '</div>';
+    }
+}, 4 );
+
+// Deal note under the price
+add_action( 'woocommerce_single_product_summary', function () {
+    global $product;
+    if ( ! $product || ! prdrwndn_is_jersey( $product->get_id() ) || ! prdrwndn_deal_on() ) return;
+    echo '<p class="prd-deal-note"><strong>' . esc_html( prdrwndn_deal_label() ) . '</strong> — mix any two jerseys. The discount shows in your cart.</p>';
+}, 11 );
+
+// WhatsApp order, pickup note, size & fit, freshener add-on — after add to cart
+add_action( 'woocommerce_single_product_summary', function () {
+    global $product;
+    if ( ! $product ) return;
+    $is_jersey = prdrwndn_is_jersey( $product->get_id() );
+    $wa = prdrwndn_whatsapp_url( 'Hi PRDRWNDN! I’d like the ' . $product->get_name() . '.' );
+    echo '<div class="prd-buy-extras">';
+    if ( $wa ) {
+        printf(
+            '<a class="prd-btn prd-btn-wa" href="%s" target="_blank" rel="noopener" data-wa-base="%s" data-product="%s">%s<span>Order on WhatsApp</span></a>',
+            esc_url( $wa ),
+            esc_attr( prdrwndn_whatsapp_number() ),
+            esc_attr( $product->get_name() ),
+            prdrwndn_icon( 'whatsapp' ) // phpcs:ignore -- static SVG
+        );
+    }
+    if ( prd_mod( 'prd_pickup_on' ) ) {
+        echo '<p class="prd-pickup">' . prdrwndn_icon( 'pin' ) . '<span>' . esc_html( prd_mod( 'prd_pickup_text' ) ) . ' — choose it at checkout.</span></p>';
+    }
+    echo '</div>';
+
+    if ( $is_jersey ) {
+        prdrwndn_size_guide();
+        prdrwndn_freshener_addon( 'product' );
+    }
+}, 31 );
+
+/** Size & fit block. */
+function prdrwndn_size_guide() {
+    $raw  = trim( (string) prd_mod( 'prd_size_chart' ) );
+    $rows = [];
+    if ( $raw !== '' ) {
+        foreach ( preg_split( '/\r?\n/', $raw ) as $line ) {
+            if ( trim( $line ) === '' ) continue;
+            $rows[] = array_map( 'trim', explode( '|', $line ) );
+        }
+    }
+    $wa = prdrwndn_whatsapp_url( 'Hi PRDRWNDN! Can you help me pick a jersey size?' );
+    ?>
+    <details class="prd-details" open>
+      <summary>Size &amp; fit</summary>
+      <div class="prd-details-body">
+        <p>Unisex fit, sizes S to 3XL. Between sizes? <?php if ( $wa ) : ?><a href="<?php echo esc_url( $wa ); ?>" target="_blank" rel="noopener">Message us on WhatsApp</a> and we’ll help you pick.<?php else : ?>Message us and we’ll help you pick.<?php endif; ?></p>
+        <?php if ( count( $rows ) > 1 ) : ?>
+        <div class="prd-table-wrap">
+          <table class="prd-size-table">
+            <thead><tr><?php foreach ( $rows[0] as $c ) echo '<th scope="col">' . esc_html( $c ) . '</th>'; ?></tr></thead>
+            <tbody>
+              <?php foreach ( array_slice( $rows, 1 ) as $r ) : ?>
+                <tr><?php foreach ( $r as $i => $c ) echo $i === 0 ? '<th scope="row">' . esc_html( $c ) . '</th>' : '<td>' . esc_html( $c ) . '</td>'; ?></tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+        <?php endif; ?>
+      </div>
+    </details>
+    <details class="prd-details">
+      <summary>Fabric &amp; care</summary>
+      <div class="prd-details-body">
+        <p>100% polyester football jersey fabric. Full sublimation: the design is dyed into the fabric, so it won’t crack or peel.</p>
+      </div>
+    </details>
+    <?php
+}
+
+// Jerseys: drop the "Additional information" tab (it only repeats the sizes)
+add_filter( 'woocommerce_product_tabs', function ( $tabs ) {
+    global $product;
+    if ( $product && prdrwndn_is_jersey( $product->get_id() ) ) unset( $tabs['additional_information'] );
+    return $tabs;
+}, 20 );
+
+// Mark the jersey variation form so the size buttons script can find it
+add_action( 'woocommerce_before_variations_form', function () {
+    global $product;
+    echo '<div class="prd-variations" data-jersey="' . ( $product && prdrwndn_is_jersey( $product->get_id() ) ? '1' : '0' ) . '" hidden></div>';
+} );
+
+/* ── Cart extras (works for both the classic cart and the cart block) ── */
+function prdrwndn_cart_extras() {
+    if ( ! function_exists( 'WC' ) || ! WC()->cart || WC()->cart->is_empty() ) return;
+    $n = prdrwndn_cart_jersey_count();
+    echo '<div class="prd-cart-extras">';
+    if ( prdrwndn_deal_on() && $n % 2 === 1 ) {
+        $url = prdrwndn_cat_url( 'prd_jersey_cat' );
+        echo '<div class="prd-cart-deal"><strong>' . esc_html( prdrwndn_deal_label() ) . ':</strong> add one more jersey and the pair costs $' . (int) prd_mod( 'prd_deal_price' ) . '. <a href="' . esc_url( $url ) . '">Pick another jersey →</a></div>';
+    }
+    prdrwndn_freshener_addon( 'cart' );
+    echo '</div>';
+}
+
+
+/* ════════════════════════════════════════════════════
+   8. PWA — PROGRESSIVE WEB APP
+════════════════════════════════════════════════════ */
 function prdrwndn_pwa_head() { ?>
     <link rel="manifest" href="<?php echo esc_url( home_url( '/manifest.json' ) ); ?>"/>
-    <meta name="theme-color" content="#20AA54"/>
+    <meta name="theme-color" content="#1E3B2F"/>
     <meta name="apple-mobile-web-app-capable" content="yes"/>
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
     <meta name="apple-mobile-web-app-title" content="PRDRWNDN"/>
     <link rel="apple-touch-icon" href="<?php echo esc_url( home_url( '/wp-content/uploads/2025/12/cropped-IMG_2191-270x270.png' ) ); ?>"/>
 <?php }
 add_action( 'wp_head', 'prdrwndn_pwa_head' );
 
-
-/**
- * Register the service worker via JavaScript.
- * Runs after the page loads so it doesn't slow anything down.
- */
 function prdrwndn_pwa_footer() { ?>
 <script>
 if ('serviceWorker' in navigator) {
@@ -498,43 +731,29 @@ add_action( 'wp_footer', 'prdrwndn_pwa_footer' );
 
 
 /* ════════════════════════════════════════════════════
-   8. AJAX — CART COUNT
-   Returns the current WooCommerce cart item count
-   as plain text. Called by JavaScript to update the
-   cart badge in the header without a page reload.
-
+   9. AJAX — CART COUNT
    URL: /wp-admin/admin-ajax.php?action=prdrwndn_cart_count
 ════════════════════════════════════════════════════ */
 function prdrwndn_cart_count() {
-    if ( class_exists( 'WooCommerce' ) ) {
+    if ( class_exists( 'WooCommerce' ) && WC()->cart ) {
         echo absint( WC()->cart->get_cart_contents_count() );
     } else {
         echo '0';
     }
-    wp_die(); // Always end AJAX handlers with wp_die()
+    wp_die();
 }
-// Register for both logged-in and logged-out users
 add_action( 'wp_ajax_prdrwndn_cart_count',        'prdrwndn_cart_count' );
 add_action( 'wp_ajax_nopriv_prdrwndn_cart_count', 'prdrwndn_cart_count' );
 
 
 /* ════════════════════════════════════════════════════
-   9. GUTENBERG — DISABLE ON CUSTOM TEMPLATES
-   Our custom page templates (homepage, about, collection)
-   use their own PHP layouts. We disable the block editor
-   on these pages because it would conflict with our code.
-   You can still use the block editor on regular pages.
+   10. GUTENBERG — DISABLE ON CUSTOM TEMPLATES
 ════════════════════════════════════════════════════ */
 function prdrwndn_disable_gutenberg( $use_block_editor, $post ) {
-    // List of our custom template files
-    $custom_templates = [
-        'front-page.php',
-        'page-about.php',
-        'page-collection.php',
-    ];
+    $custom_templates = [ 'front-page.php', 'page-about.php', 'page-collection.php' ];
     $template = get_post_meta( $post->ID, '_wp_page_template', true );
     if ( in_array( $template, $custom_templates, true ) ) {
-        return false; // Use classic editor instead
+        return false;
     }
     return $use_block_editor;
 }
@@ -543,31 +762,13 @@ add_filter( 'use_block_editor_for_post', 'prdrwndn_disable_gutenberg', 10, 2 );
 
 /* ════════════════════════════════════════════════════
    GITHUB AUTO-UPDATER
-   Checks GitHub for new theme versions and shows
-   an "Update Available" notice in WordPress dashboard
-   just like a regular theme update.
-
-   HOW IT WORKS:
-   1. You push changes to GitHub
-   2. You create a new Release and tag it (e.g. v1.1.0)
-   3. WordPress checks GitHub and shows update available
-   4. You click "Update" — done, just like WordPress core
-
-   SETUP REQUIRED:
-   - Set PRDRWNDN_GITHUB_REPO to your GitHub username/repo
-   - Set PRDRWNDN_GITHUB_TOKEN if your repo is private
+   1. Push changes to GitHub
+   2. Create a Release tagged e.g. v2.0.0 and ATTACH prdrwndn-theme.zip
+   3. Dashboard → Updates → Check Again, then Update
 ════════════════════════════════════════════════════ */
-
-// ── YOUR GITHUB SETTINGS ──────────────────────────
-// Change this to your GitHub repo after creating it
 define( 'PRDRWNDN_GITHUB_REPO',  'isshiimwe/prdrwndn-theme' );
 define( 'PRDRWNDN_GITHUB_TOKEN', '' ); // Leave empty for public repo
-// ──────────────────────────────────────────────────
 
-/**
- * Check GitHub for a newer version of the theme.
- * WordPress calls this automatically in the background.
- */
 function prdrwndn_check_for_update( $transient ) {
     if ( empty( $transient->checked ) ) return $transient;
 
@@ -576,12 +777,10 @@ function prdrwndn_check_for_update( $transient ) {
     $github_repo   = PRDRWNDN_GITHUB_REPO;
     $github_token  = PRDRWNDN_GITHUB_TOKEN;
 
-    // Only check every 12 hours to avoid API rate limits
     $cache_key = 'prdrwndn_github_update_' . $theme_slug;
     $cached    = get_transient( $cache_key );
 
     if ( false === $cached ) {
-        // Fetch latest release from GitHub API
         $url  = "https://api.github.com/repos/{$github_repo}/releases/latest";
         $args = [
             'headers' => [
@@ -590,31 +789,21 @@ function prdrwndn_check_for_update( $transient ) {
             ],
             'timeout' => 10,
         ];
-
-        // Add auth header for private repos
         if ( ! empty( $github_token ) ) {
             $args['headers']['Authorization'] = "token {$github_token}";
         }
-
         $response = wp_remote_get( $url, $args );
-
         if ( is_wp_error( $response ) ) return $transient;
         if ( 200 !== wp_remote_retrieve_response_code( $response ) ) return $transient;
-
         $release = json_decode( wp_remote_retrieve_body( $response ) );
         if ( empty( $release->tag_name ) ) return $transient;
-
-        // Cache for 12 hours
         set_transient( $cache_key, $release, 12 * HOUR_IN_SECONDS );
         $cached = $release;
     }
 
-    // Strip 'v' prefix from tag (v1.1.0 → 1.1.0)
     $latest_ver = ltrim( $cached->tag_name, 'v' );
 
-    // If GitHub has a newer version, tell WordPress about it
     if ( version_compare( $latest_ver, $current_ver, '>' ) ) {
-
         // Find the ATTACHED zip asset — must be named prdrwndn-theme.zip
         $zip_url = '';
         if ( ! empty( $cached->assets ) ) {
@@ -625,12 +814,10 @@ function prdrwndn_check_for_update( $transient ) {
                 }
             }
         }
-
         // NEVER use auto-generated zip — wrong folder name breaks WordPress
         if ( empty( $zip_url ) ) {
-            return $transient; // Skip — no attached zip found
+            return $transient;
         }
-
         $transient->response[ $theme_slug ] = [
             'theme'       => $theme_slug,
             'new_version' => $latest_ver,
@@ -643,47 +830,17 @@ function prdrwndn_check_for_update( $transient ) {
 }
 add_filter( 'pre_set_site_transient_update_themes', 'prdrwndn_check_for_update' );
 
-
-/**
- * Clear the GitHub update cache when WordPress
- * manually triggers a theme update check.
- */
 function prdrwndn_clear_update_cache() {
     delete_transient( 'prdrwndn_github_update_prdrwndn-theme' );
 }
 add_action( 'upgrader_process_complete', 'prdrwndn_clear_update_cache' );
 
 
-/**
- * Show a notice in the WordPress dashboard if the
- * GitHub repo hasn't been configured yet.
- */
-function prdrwndn_github_setup_notice() {
-    if ( PRDRWNDN_GITHUB_REPO !== 'YOUR-USERNAME/prdrwndn-theme' ) return;
-    if ( ! current_user_can( 'manage_options' ) ) return;
-    $screen = get_current_screen();
-    if ( ! $screen || $screen->id !== 'themes' ) return;
-    ?>
-    <div class="notice notice-warning">
-        <p>
-            <strong>PRDRWNDN® Theme:</strong>
-            GitHub auto-updates are not configured yet.
-            Open <code>wp-content/themes/prdrwndn-theme/functions.php</code>
-            and set <code>PRDRWNDN_GITHUB_REPO</code> to your GitHub repository.
-        </p>
-    </div>
-    <?php
-}
-add_action( 'admin_notices', 'prdrwndn_github_setup_notice' );
-
-
 /* ════════════════════════════════════════════════════
    FORCE SHOP ARCHIVE TEMPLATE
-   Ensures WooCommerce uses our archive-product.php
-   for the shop page instead of the generic wrapper
 ════════════════════════════════════════════════════ */
 function prdrwndn_shop_template( $template ) {
-    if ( is_shop() || is_product_category() || is_product_tag() ) {
+    if ( function_exists( 'is_shop' ) && ( is_shop() || is_product_category() || is_product_tag() ) ) {
         $custom = get_template_directory() . '/woocommerce/archive-product.php';
         if ( file_exists( $custom ) ) {
             return $custom;
@@ -696,10 +853,7 @@ add_filter( 'template_include', 'prdrwndn_shop_template', 99 );
 
 /* ════════════════════════════════════════════════════
    NEWSLETTER SUBSCRIBE — Footer email capture
-   Stores subscribers as a WordPress option (list of
-   email => date). View/export via:
-   Tools > Site Health > Info (or add an admin page later)
-   No third-party plugin required.
+   View/export: Dashboard → Tools → Subscribers
 ════════════════════════════════════════════════════ */
 function prdrwndn_handle_subscribe() {
     check_ajax_referer( 'prdrwndn_subscribe', 'nonce' );
@@ -712,7 +866,6 @@ function prdrwndn_handle_subscribe() {
 
     $subscribers = get_option( 'prdrwndn_subscribers', [] );
 
-    // Already subscribed
     if ( isset( $subscribers[ $email ] ) ) {
         wp_send_json_success( [ 'message' => "You're already on the list!" ] );
     }
@@ -720,7 +873,6 @@ function prdrwndn_handle_subscribe() {
     $subscribers[ $email ] = current_time( 'mysql' );
     update_option( 'prdrwndn_subscribers', $subscribers, false );
 
-    // Optional: notify admin of new subscriber
     $admin_email = get_option( 'admin_email' );
     if ( $admin_email ) {
         wp_mail(
@@ -735,8 +887,6 @@ function prdrwndn_handle_subscribe() {
 add_action( 'wp_ajax_prdrwndn_subscribe',        'prdrwndn_handle_subscribe' );
 add_action( 'wp_ajax_nopriv_prdrwndn_subscribe', 'prdrwndn_handle_subscribe' );
 
-/* Simple admin page to view/export subscribers:
-   Dashboard > Tools > Subscribers */
 function prdrwndn_subscribers_admin_page() {
     add_management_page(
         'Newsletter Subscribers',

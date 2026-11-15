@@ -2,332 +2,253 @@
 /**
  * Homepage Template
  * Template Name: Homepage
+ *
+ * Sections: hero (jerseys) → shop lanes → the jerseys → what the designs mean
+ * → car fresheners → flags & more → shipping / pickup / WhatsApp
  */
 get_header();
 
-// ── Get featured freshener ──
-$freshener = prdrwndn_get_freshener();
+$jersey_url = prdrwndn_cat_url( 'prd_jersey_cat' );
+$shop_url   = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
+$wa_jersey  = prdrwndn_whatsapp_url( 'Hi PRDRWNDN! I’d like to order a jersey.' );
+$deal_on    = prdrwndn_deal_on();
 
-// ── Get secondary products (exclude freshener) ──
-$exclude_id  = $freshener ? $freshener->get_id() : 0;
-$prod_count  = (int) get_theme_mod( 'prdrwndn_products_count', 4 );
-$other_products = new WP_Query( [
-    'post_type'      => 'product',
-    'posts_per_page' => $prod_count,
-    'post_status'    => 'publish',
-    'post__not_in'   => $exclude_id ? [ $exclude_id ] : [],
-    'orderby'        => 'menu_order date',
-    'order'          => 'ASC',
-] );
-?>
-
-<!-- ═══════════════════════════════════
-     HERO
-═══════════════════════════════════ -->
-<section class="site-hero">
-  <div class="hero-bg-gradient"></div>
-  <div class="hero-bg-img" style="background-image:url('<?php echo esc_url( get_theme_mod( 'prdrwndn_hero_bg', get_template_directory_uri() . '/assets/hero-bg.jpg' ) ); ?>')"></div>
-
-  <?php if ( $freshener ) :
-    $img_id  = $freshener->get_image_id();
-    $img_url = $img_id ? wp_get_attachment_image_url( $img_id, 'large' ) : '';
-    if ( $img_url ) : ?>
-      <img class="hero-product-float"
-           src="<?php echo esc_url( $img_url ); ?>"
-           alt="<?php echo esc_attr( $freshener->get_name() ); ?>"
-           loading="eager"/>
-    <?php endif;
-  endif; ?>
-
-  <div class="hero-content">
-    <div class="hero-eyebrow">PRDRWNDN® · Phoenix, AZ</div>
-    <h1 class="hero-h1">
-      <?php echo esc_html( get_theme_mod( 'prdrwndn_hero_line1', 'YOUR ROOTS.' ) ); ?><br/>
-      <em><?php echo esc_html( get_theme_mod( 'prdrwndn_hero_line2', 'YOUR HOME.' ) ); ?></em>
-    </h1>
-    <p class="hero-serif">For Rwandans everywhere — and friends of Rwanda who know that home can be a feeling, a pattern, a color.</p>
-    <p class="hero-sub"><?php echo esc_html( get_theme_mod( 'prdrwndn_tagline', 'A contemporary cultural brand rooted in memory, place and pride.' ) ); ?></p>
-    <div class="hero-actions">
-      <a href="<?php echo esc_url( home_url( '/shop/prdrwndn-car-fresheners/' ) ); ?>" class="btn-primary">Shop Fresheners</a>
-      <a href="<?php echo esc_url( home_url( '/collection/' ) ); ?>" class="btn-ghost">Full Collection</a>
-    </div>
-  </div>
-
-  <div class="hero-stats">
-    <div>
-      <div class="hero-stat-num">$5</div>
-      <div class="hero-stat-label">Per freshener</div>
-    </div>
-    <div>
-      <div class="hero-stat-num">2</div>
-      <div class="hero-stat-label">Signature scents</div>
-    </div>
-    <div>
-      <div class="hero-stat-num">🌍</div>
-      <div class="hero-stat-label">Ships worldwide</div>
-    </div>
-  </div>
-</section>
-
-<!-- MARQUEE -->
-<div class="marquee-bar">
-  <div class="marquee-track" aria-hidden="true">
-    <?php $items = [ 'Car Fresheners', 'Rwanda Map Shape', 'Black Ice', 'Desert Rose', 'Ships Worldwide', '$5 Each', 'Heritage Apparel', 'Cultural Fashion', 'Proud Rwandan', 'Free Shipping Over $35' ];
-    $repeated = array_merge( $items, $items );
-    foreach ( $repeated as $item ) : ?>
-      <span class="marquee-item">
-        <?php echo esc_html( $item ); ?>
-        <span class="marquee-dot"></span>
-      </span>
-    <?php endforeach; ?>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════
-     FRESHENER SPOTLIGHT
-═══════════════════════════════════ -->
-<?php if ( $freshener ) :
-  $f_img_id  = $freshener->get_image_id();
-  $f_img_url = $f_img_id ? wp_get_attachment_image_url( $f_img_id, 'large' ) : '';
-  $f_price   = $freshener->get_price();
-  $f_url     = $freshener->get_permalink();
-  $gallery   = $freshener->get_gallery_image_ids();
-
-  // Get variations for scent pills
-  $variations = [];
-  if ( $freshener->is_type( 'variable' ) ) {
-    foreach ( $freshener->get_children() as $child_id ) {
-      $variation = wc_get_product( $child_id );
-      if ( $variation ) {
-        $attrs = $variation->get_variation_attributes();
-        foreach ( $attrs as $name => $val ) {
-          if ( $val ) $variations[] = $val;
-        }
-      }
+/* ── Jersey cards: from the jersey category, or the theme's own images until the products exist ── */
+$meanings = [ 'izuba' => 'Kinyarwanda for “sun”', 'imigongo' => 'The art of eastern Rwanda' ];
+$cards    = [];
+$from     = null;
+foreach ( prdrwndn_cat_products( 'prd_jersey_cat', 4 ) as $p ) {
+    $key = '';
+    foreach ( $meanings as $k => $m ) { if ( stripos( $p->get_name(), $k ) !== false ) { $key = $k; break; } }
+    $sizes = prdrwndn_sizes( $p );
+    $cards[] = [
+        'name'    => $p->get_name(),
+        'url'     => $p->get_permalink(),
+        'front'   => prdrwndn_product_img( $p, 'woocommerce_single', 0 ),
+        'back'    => prdrwndn_product_img( $p, 'woocommerce_single', 1 ),
+        'price'   => $p->get_price_html(),
+        'meaning' => $key ? $meanings[ $key ] : '',
+        'sizes'   => $sizes,
+        'low'     => prdrwndn_low_stock_note( $sizes ),
+        'in'      => $p->is_in_stock(),
+    ];
+    $pr = (float) $p->get_price();
+    if ( $pr > 0 && ( $from === null || $pr < $from ) ) $from = $pr;
+}
+if ( ! $cards ) {
+    foreach ( prdrwndn_fallback_jerseys() as $j ) {
+        $cards[] = [ 'name' => $j['name'] . ' Jersey', 'url' => $wa_jersey ?: $shop_url, 'front' => $j['front'], 'back' => $j['back'],
+                     'price' => '', 'meaning' => $j['meaning'], 'sizes' => [], 'low' => '', 'in' => true ];
     }
-  }
+}
+$hero_imgs = array_slice( array_values( array_filter( array_column( $cards, 'front' ) ) ), 0, 2 );
+
+/* ── Lanes ── */
+$freshener  = prdrwndn_get_freshener();
+$flag_items = prdrwndn_cat_products( 'prd_flag_cat', 1 );
+$lanes = [
+    [ 'k' => 'Wear', 'label' => 'Jerseys & tees',  'url' => $jersey_url,                         'img' => $cards[0]['front'] ?? '' ],
+    [ 'k' => 'Ride', 'label' => 'Car fresheners',  'url' => prdrwndn_cat_url( 'prd_fresh_cat' ), 'img' => $freshener ? prdrwndn_product_img( $freshener, 'woocommerce_thumbnail' ) : '' ],
+    [ 'k' => 'Fly',  'label' => 'Flags',           'url' => prdrwndn_cat_url( 'prd_flag_cat' ),  'img' => $flag_items ? prdrwndn_product_img( $flag_items[0], 'woocommerce_thumbnail' ) : '' ],
+];
+
+/* ── Flags & more ── */
+$more = [];
+if ( function_exists( 'wc_get_products' ) ) {
+    $exclude = [];
+    foreach ( prdrwndn_cat_products( 'prd_jersey_cat', 20 ) as $p ) $exclude[] = $p->get_id();
+    foreach ( prdrwndn_cat_products( 'prd_fresh_cat', 20 ) as $p ) $exclude[] = $p->get_id();
+    if ( $freshener ) $exclude[] = $freshener->get_id();
+    $more = wc_get_products( [ 'status' => 'publish', 'limit' => 4, 'exclude' => $exclude, 'orderby' => 'menu_order', 'order' => 'ASC' ] );
+}
 ?>
-<section class="section-pad">
-  <div class="container">
-    <div class="eyebrow reveal">Signature Product</div>
-    <div class="freshener-spotlight reveal reveal-delay-1">
 
-      <!-- Visual -->
-      <div class="spotlight-visual">
-        <?php if ( $f_img_url ) : ?>
-          <img src="<?php echo esc_url( $f_img_url ); ?>"
-               alt="<?php echo esc_attr( $freshener->get_name() ); ?>"/>
-        <?php else : ?>
-          <div style="font-size:6rem;">🧊</div>
+<!-- ═══ HERO ═══ -->
+<section class="prd-hero">
+  <div class="prd-wrap prd-hero-grid">
+    <div class="prd-hero-copy">
+      <div class="prd-eyebrow"><span class="prd-live" aria-hidden="true"></span><?php echo esc_html( prd_mod( 'prd_hero_eyebrow' ) ); ?></div>
+      <h1 class="prd-hero-title"><?php echo esc_html( prd_mod( 'prd_hero_title' ) ); ?></h1>
+      <p class="prd-hero-text"><?php echo esc_html( prd_mod( 'prd_hero_text' ) ); ?></p>
+      <p class="prd-hero-facts">
+        <?php if ( $from ) : ?><span><strong>$<?php echo esc_html( wc_format_decimal( $from, 0 ) ); ?></strong> each</span><?php endif; ?>
+        <?php if ( $deal_on ) : ?><span><strong><?php echo esc_html( prdrwndn_deal_label() ); ?></strong></span><?php endif; ?>
+        <span>Sizes S–3XL</span>
+      </p>
+      <div class="prd-actions">
+        <a class="prd-btn prd-btn-primary" href="<?php echo esc_url( $jersey_url ); ?>">Shop jerseys <?php echo prdrwndn_icon( 'arrow' ); ?></a>
+        <?php if ( $wa_jersey ) : ?>
+          <a class="prd-btn prd-btn-wa" href="<?php echo esc_url( $wa_jersey ); ?>" target="_blank" rel="noopener"><?php echo prdrwndn_icon( 'whatsapp' ); ?><span>Order on WhatsApp</span></a>
         <?php endif; ?>
-        <div class="spotlight-visual-overlay"></div>
-      </div>
-
-      <!-- Content -->
-      <div class="spotlight-body">
-        <div>
-          <div class="eyebrow"><?php echo esc_html( $freshener->get_name() ); ?></div>
-          <div class="display-title" style="font-size:clamp(1.5rem,3vw,2rem); margin-bottom:0.5rem;">Rwanda Map-Shaped Car Freshener</div>
-          <div class="spotlight-price-tag">
-            $<?php echo esc_html( number_format( (float) $f_price, 0 ) ); ?>
-            <small>per freshener · free shipping over $35</small>
-          </div>
-        </div>
-
-        <?php if ( ! empty( $variations ) ) : ?>
-        <div>
-          <div style="font-size:0.7rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;">Choose your scent</div>
-          <div class="scent-selector">
-            <?php foreach ( array_unique( $variations ) as $i => $scent ) : ?>
-              <button class="scent-pill <?php echo $i === 0 ? 'active' : ''; ?>"
-                      data-scent="<?php echo esc_attr( $scent ); ?>">
-                <?php echo esc_html( $scent ); ?>
-              </button>
-            <?php endforeach; ?>
-          </div>
-        </div>
-        <?php else : ?>
-        <div class="scent-selector">
-          <button class="scent-pill active">🧊 Black Ice</button>
-          <button class="scent-pill">🌹 Desert Rose</button>
-        </div>
-        <?php endif; ?>
-
-        <div class="spotlight-feats">
-          <div class="spotlight-feat"><span class="feat-check">✓</span> Cut in the exact shape of Rwanda's borders</div>
-          <div class="spotlight-feat"><span class="feat-check">✓</span> Rwanda flag colors throughout the design</div>
-          <div class="spotlight-feat"><span class="feat-check">✓</span> Long-lasting premium fragrance</div>
-          <div class="spotlight-feat"><span class="feat-check">✓</span> Ships worldwide from Phoenix, AZ</div>
-        </div>
-
-        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
-          <a href="<?php echo esc_url( $f_url ); ?>" class="btn-primary">Add to cart — $<?php echo esc_html( number_format( (float) $f_price, 0 ) ); ?></a>
-          <a href="<?php echo esc_url( $f_url ); ?>" class="btn-ghost">View details</a>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-<?php endif; ?>
-
-<!-- ═══════════════════════════════════
-     EDITORIAL — "Not just what we wear"
-═══════════════════════════════════ -->
-<div class="editorial-strip">
-  <div class="editorial-inner">
-    <div class="reveal">
-      <h2 class="editorial-headline">Not just<br/>what we <em>wear.</em></h2>
-    </div>
-    <div class="editorial-body reveal reveal-delay-1">
-      <p>PRDRWNDN started with a simple question: <strong>what would it look like to make a homesick person feel held?</strong></p>
-      <p>We make contemporary things with an old-soul point of view. A graphic tee can carry a landscape. A bracelet can carry a blessing. A flag can turn any room into a return.</p>
-      <p>A car freshener shaped like Rwanda — hanging from your mirror, carrying the scent of something familiar — is a small act of remembering that you belong somewhere.</p>
-      <a href="<?php echo esc_url( home_url( '/about/' ) ); ?>" class="btn-cream" style="margin-top:0.5rem;">Our story →</a>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════
-     HOME COLLECTION — Other Products
-═══════════════════════════════════ -->
-<?php if ( $other_products->have_posts() ) : ?>
-<section class="section-pad">
-  <div class="container">
-    <div class="products-section-head reveal">
-      <div>
-        <div class="eyebrow">Home Collection</div>
-        <h2 style="font-family:var(--font-display);font-size:clamp(1.8rem,4vw,3rem);letter-spacing:1px;line-height:0.95;">More from PRDRWNDN<em style="color:var(--rw-green);">®</em></h2>
-      </div>
-      <a href="<?php echo esc_url( home_url( '/shop/' ) ); ?>" class="see-all-link">See all →</a>
-    </div>
-
-    <div class="woo-products-grid reveal reveal-delay-1">
-      <?php while ( $other_products->have_posts() ) : $other_products->the_post();
-        global $product;
-        $product = wc_get_product( get_the_ID() );
-        if ( ! $product ) continue;
-        $img_id  = $product->get_image_id();
-        $img_url = $img_id ? wp_get_attachment_image_url( $img_id, 'medium' ) : '';
-        $price   = $product->get_price_html();
-        $link    = $product->get_permalink();
-        $name    = $product->get_name();
-      ?>
-        <a href="<?php echo esc_url( $link ); ?>" style="display:block;">
-          <div style="aspect-ratio:1;overflow:hidden;background:var(--surface2);">
-            <?php if ( $img_url ) : ?>
-              <img src="<?php echo esc_url( $img_url ); ?>"
-                   alt="<?php echo esc_attr( $name ); ?>"
-                   style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s ease;"
-                   loading="lazy"/>
-            <?php else : ?>
-              <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;">🇷🇼</div>
-            <?php endif; ?>
-          </div>
-          <div style="padding:0.85rem 1rem;">
-            <div style="font-size:0.85rem;font-weight:600;color:var(--rw-cream);margin-bottom:4px;"><?php echo esc_html( $name ); ?></div>
-            <div style="font-size:0.9rem;font-weight:700;color:var(--rw-green);"><?php echo wp_kses_post( $price ); ?></div>
-          </div>
-        </a>
-      <?php endwhile; wp_reset_postdata(); ?>
-    </div>
-
-    <div style="text-align:center;margin-top:2rem;" class="reveal">
-      <a href="<?php echo esc_url( home_url( '/shop/' ) ); ?>" class="btn-ghost">Browse the full collection →</a>
-    </div>
-  </div>
-</section>
-<?php endif; ?>
-
-<!-- ═══════════════════════════════════
-     APP PROMO
-═══════════════════════════════════ -->
-<div class="app-promo-section">
-  <div class="app-promo-inner">
-
-    <!-- Phone mockup -->
-    <div class="app-phone-mockup reveal">
-      <div class="app-phone-shell">
-        <div class="app-phone-notch"></div>
-        <div class="app-phone-screen">
-          <div class="app-screen-header">
-            <div class="app-screen-logo">PRDRNDN®</div>
-            <div class="app-screen-flag">
-              <span style="background:#20AA54;"></span>
-              <span style="background:#FFD700;"></span>
-              <span style="background:#20A0D0;"></span>
-            </div>
-          </div>
-          <div class="app-screen-body">
-            <div class="app-screen-card">
-              <span class="app-screen-card-icon">🧊</span>
-              <div>
-                <div class="app-screen-card-label">Black Ice Freshener</div>
-                <div class="app-screen-card-price">$5.00</div>
-              </div>
-            </div>
-            <div class="app-screen-card">
-              <span class="app-screen-card-icon">🌹</span>
-              <div>
-                <div class="app-screen-card-label">Desert Rose Freshener</div>
-                <div class="app-screen-card-price">$5.00</div>
-              </div>
-            </div>
-            <div class="app-screen-card">
-              <span class="app-screen-card-icon">🇷🇼</span>
-              <div>
-                <div class="app-screen-card-label">Heritage Apparel</div>
-                <div class="app-screen-card-price">From $25.00</div>
-              </div>
-            </div>
-            <div class="app-screen-btn">Shop Now</div>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- Content -->
-    <div class="app-content reveal reveal-delay-1">
-      <div class="eyebrow">PRDRWNDN® App</div>
-      <h2>Shop faster.<br/><em>Anywhere.</em></h2>
-      <p>Install our PWA app directly from your browser — no App Store needed. Full shop, cart, orders, and offline browsing right from your home screen.</p>
-      <div class="app-features">
-        <div class="app-feature"><span class="app-feature-icon">⚡</span> Faster than the website — fullscreen app</div>
-        <div class="app-feature"><span class="app-feature-icon">📦</span> Track your orders in real time</div>
-        <div class="app-feature"><span class="app-feature-icon">✈️</span> Browse products offline</div>
-        <div class="app-feature"><span class="app-feature-icon">🔒</span> Secure checkout with Stripe</div>
-      </div>
-      <a href="<?php echo esc_url( home_url( '/app.html' ) ); ?>" class="btn-primary">📲 Get the free app</a>
-    </div>
-
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════
-     REVIEWS
-═══════════════════════════════════ -->
-<section class="section-pad">
-  <div class="container">
-    <div class="eyebrow reveal">What people are saying</div>
-    <h2 class="display-title reveal reveal-delay-1" style="margin-bottom:2rem;">From the community.</h2>
-    <div class="reviews-grid">
-      <?php
-      $reviews = [
-        [ 'text' => 'Bought the Black Ice freshener and my car smells amazing. The Rwanda shape is so clean — everyone who gets in asks about it.', 'author' => 'Amira U.', 'location' => 'Kigali, Rwanda', 'stars' => 5 ],
-        [ 'text' => 'I ordered two Desert Rose ones for my mom and sister. Perfect gift. Shipped fast from Phoenix, arrived in great condition.', 'author' => 'Patrick N.', 'location' => 'Brussels, Belgium', 'stars' => 5 ],
-        [ 'text' => 'As a Rwandan in the diaspora this brand hits different. The car freshener is a small but meaningful thing to carry home with you.', 'author' => 'Cynthia K.', 'location' => 'Toronto, Canada', 'stars' => 5 ],
-      ];
-      foreach ( $reviews as $i => $r ) : ?>
-        <div class="review-card reveal reveal-delay-<?php echo $i + 1; ?>">
-          <div class="review-stars"><?php echo prdrwndn_stars( $r['stars'] ); ?></div>
-          <p class="review-text">"<?php echo esc_html( $r['text'] ); ?>"</p>
-          <div>
-            <div class="review-author"><?php echo esc_html( $r['author'] ); ?></div>
-            <div class="review-location"><?php echo esc_html( $r['location'] ); ?></div>
-          </div>
-        </div>
+    <div class="prd-hero-art" aria-hidden="true">
+      <div class="prd-hero-sun"></div>
+      <?php foreach ( $hero_imgs as $i => $src ) : ?>
+        <img class="prd-hero-j prd-hero-j<?php echo $i + 1; ?>" src="<?php echo esc_url( $src ); ?>" alt="" loading="eager" fetchpriority="<?php echo $i === 0 ? 'high' : 'auto'; ?>"/>
       <?php endforeach; ?>
     </div>
+  </div>
+</section>
+
+<!-- ═══ LANES ═══ -->
+<section class="prd-section prd-lanes-sec" aria-label="Shop by">
+  <div class="prd-wrap">
+    <div class="prd-lanes">
+      <?php foreach ( $lanes as $l ) : ?>
+        <a class="prd-lane" href="<?php echo esc_url( $l['url'] ); ?>">
+          <span class="prd-lane-img"><?php if ( $l['img'] ) : ?><img src="<?php echo esc_url( $l['img'] ); ?>" alt="" loading="lazy"/><?php endif; ?></span>
+          <span class="prd-lane-text">
+            <span class="prd-lane-k"><?php echo esc_html( $l['k'] ); ?></span>
+            <span class="prd-lane-label"><?php echo esc_html( $l['label'] ); ?></span>
+          </span>
+          <span class="prd-lane-arrow"><?php echo prdrwndn_icon( 'arrow' ); ?></span>
+        </a>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ THE JERSEYS ═══ -->
+<section class="prd-section" id="jerseys">
+  <div class="prd-wrap">
+    <div class="prd-sec-head">
+      <div>
+        <div class="prd-eyebrow">The jerseys</div>
+        <h2 class="prd-h2">Izuba &amp; Imigongo</h2>
+      </div>
+      <a class="prd-link" href="<?php echo esc_url( $jersey_url ); ?>">Shop jerseys <?php echo prdrwndn_icon( 'arrow' ); ?></a>
+    </div>
+
+    <div class="prd-jersey-grid">
+      <?php foreach ( $cards as $c ) : ?>
+        <a class="prd-jcard<?php echo $c['back'] ? ' has-back' : ''; ?>" href="<?php echo esc_url( $c['url'] ); ?>">
+          <div class="prd-jcard-img">
+            <?php if ( $c['front'] ) : ?><img class="prd-jcard-front" src="<?php echo esc_url( $c['front'] ); ?>" alt="<?php echo esc_attr( $c['name'] . ', front' ); ?>" loading="lazy"/><?php endif; ?>
+            <?php if ( $c['back'] ) : ?><img class="prd-jcard-back" src="<?php echo esc_url( $c['back'] ); ?>" alt="<?php echo esc_attr( $c['name'] . ', back' ); ?>" loading="lazy"/><?php endif; ?>
+            <?php if ( ! $c['in'] ) : ?><span class="prd-badge prd-badge-out">Sold out</span><?php endif; ?>
+          </div>
+          <div class="prd-jcard-body">
+            <div class="prd-jcard-top">
+              <h3><?php echo esc_html( $c['name'] ); ?></h3>
+              <?php if ( $c['price'] ) : ?><span class="prd-price"><?php echo wp_kses_post( $c['price'] ); ?></span><?php endif; ?>
+            </div>
+            <?php if ( $c['meaning'] ) : ?><p class="prd-jcard-meaning"><?php echo esc_html( $c['meaning'] ); ?></p><?php endif; ?>
+            <?php if ( $c['sizes'] ) : ?>
+              <ul class="prd-size-mini" aria-label="Sizes">
+                <?php foreach ( $c['sizes'] as $s ) : ?>
+                  <li class="<?php echo $s['in'] ? '' : 'is-out'; ?>"><?php echo esc_html( $s['label'] ); ?><?php if ( ! $s['in'] ) echo '<span class="screen-reader-text"> sold out</span>'; ?></li>
+                <?php endforeach; ?>
+              </ul>
+            <?php endif; ?>
+            <?php if ( $c['low'] ) : ?><p class="prd-low"><?php echo esc_html( $c['low'] ); ?></p><?php endif; ?>
+          </div>
+        </a>
+      <?php endforeach; ?>
+    </div>
+
+    <?php if ( $deal_on ) : ?>
+      <div class="prd-deal-band">
+        <span class="prd-deal-big"><?php echo esc_html( prdrwndn_deal_label() ); ?></span>
+        <span>Mix and match any two jerseys. The discount is taken off in your cart.</span>
+      </div>
+    <?php endif; ?>
+  </div>
+</section>
+
+<!-- ═══ WHAT THE DESIGNS MEAN ═══ -->
+<section class="prd-story">
+  <?php prdrwndn_imigongo(); ?>
+  <div class="prd-wrap prd-story-grid">
+    <div class="prd-story-intro">
+      <div class="prd-eyebrow">What you’re wearing</div>
+      <h2 class="prd-h2">Drawn from home.</h2>
+    </div>
+    <div class="prd-story-items">
+      <article>
+        <h3>Izuba</h3>
+        <p class="prd-serif">“sun”</p>
+        <p>The sun from Rwanda’s flag rises out of the crest and spreads across the shirt, above a row of green hills at the hem.</p>
+      </article>
+      <article>
+        <h3>Imigongo</h3>
+        <p class="prd-serif">the art of the east</p>
+        <p>The bold geometric relief art of eastern Rwanda. Its triangles cover the sleeves and run across the shoulders on the back.</p>
+      </article>
+      <article>
+        <h3>Umunyarwanda · 250</h3>
+        <p class="prd-serif">on the back</p>
+        <p>“A Rwandan”, over 250, Rwanda’s calling code. On both jerseys.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CAR FRESHENERS ═══ -->
+<?php if ( $freshener ) :
+  $f_img   = prdrwndn_product_img( $freshener, 'woocommerce_single' );
+  $f_links = prdrwndn_freshener_links( $freshener, function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : '' );
+?>
+<section class="prd-section">
+  <div class="prd-wrap prd-feature">
+    <a class="prd-feature-img" href="<?php echo esc_url( $freshener->get_permalink() ); ?>" tabindex="-1" aria-hidden="true">
+      <?php if ( $f_img ) : ?><img src="<?php echo esc_url( $f_img ); ?>" alt="" loading="lazy"/><?php endif; ?>
+    </a>
+    <div class="prd-feature-body">
+      <div class="prd-eyebrow">Ride · Car fresheners</div>
+      <h2 class="prd-h2">The one that started it.</h2>
+      <p class="prd-lead">Cut in the exact shape of Rwanda’s borders, in flag colors. Hang it from your mirror.</p>
+      <p class="prd-price-lg"><?php echo wp_kses_post( $freshener->get_price_html() ); ?> <small>each</small></p>
+      <?php if ( $f_links ) : ?>
+        <div class="prd-chip-row">
+          <?php foreach ( $f_links as $fl ) : ?>
+            <a class="prd-chip-btn" href="<?php echo esc_url( $fl['url'] ); ?>" rel="nofollow">+ <?php echo esc_html( $fl['label'] ); ?></a>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+      <a class="prd-link" href="<?php echo esc_url( prdrwndn_cat_url( 'prd_fresh_cat' ) ); ?>">All fresheners <?php echo prdrwndn_icon( 'arrow' ); ?></a>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
+
+<!-- ═══ FLAGS & MORE ═══ -->
+<?php if ( $more ) : ?>
+<section class="prd-section prd-section-sand">
+  <div class="prd-wrap">
+    <div class="prd-sec-head">
+      <div>
+        <div class="prd-eyebrow">Fly · Flags &amp; more</div>
+        <h2 class="prd-h2">For the home and the game.</h2>
+      </div>
+      <a class="prd-link" href="<?php echo esc_url( $shop_url ); ?>">Shop all <?php echo prdrwndn_icon( 'arrow' ); ?></a>
+    </div>
+    <ul class="products prd-grid">
+      <?php
+      foreach ( $more as $p ) {
+          $GLOBALS['product'] = $p;
+          $GLOBALS['post']    = get_post( $p->get_id() );
+          setup_postdata( $GLOBALS['post'] );
+          wc_get_template_part( 'content', 'product' );
+      }
+      wp_reset_postdata();
+      ?>
+    </ul>
+  </div>
+</section>
+<?php endif; ?>
+
+<!-- ═══ INFO ═══ -->
+<section class="prd-info">
+  <div class="prd-wrap prd-info-grid">
+    <?php if ( prd_mod( 'prd_pickup_on' ) ) : ?>
+      <div class="prd-info-item"><?php echo prdrwndn_icon( 'pin' ); ?><div><strong><?php echo esc_html( prd_mod( 'prd_pickup_text' ) ); ?></strong><span>Choose local pickup at checkout.</span></div></div>
+    <?php endif; ?>
+    <div class="prd-info-item"><?php echo prdrwndn_icon( 'box' ); ?><div><strong>Ships from Phoenix, AZ</strong><span>Shipping options and costs at checkout.</span></div></div>
+    <?php $wa_q = prdrwndn_whatsapp_url( 'Hi PRDRWNDN! I have a question.' ); if ( $wa_q ) : ?>
+      <a class="prd-info-item" href="<?php echo esc_url( $wa_q ); ?>" target="_blank" rel="noopener"><?php echo prdrwndn_icon( 'chat' ); ?><div><strong>Questions? WhatsApp us</strong><span>Sizing, orders, anything.</span></div></a>
+    <?php endif; ?>
   </div>
 </section>
 

@@ -1,18 +1,19 @@
-<?php get_header(); ?>
-
-<main style="padding:8rem 2rem 4rem;min-height:60vh;">
-  <div class="container" style="max-width:860px;">
-    <?php while ( have_posts() ) : the_post(); ?>
-      <article>
-        <h1 style="font-family:var(--font-display);font-size:clamp(2.5rem,6vw,5rem);color:var(--rw-cream);letter-spacing:1px;margin-bottom:1.5rem;line-height:0.95;">
-          <?php the_title(); ?>
-        </h1>
-        <div style="font-size:0.95rem;color:var(--muted);line-height:1.85;" class="page-content">
-          <?php the_content(); ?>
-        </div>
-      </article>
-    <?php endwhile; ?>
-  </div>
-</main>
-
+<?php
+/**
+ * Default page — also used for Cart, Checkout and My Account.
+ */
+get_header();
+$is_shop_page = function_exists( 'is_cart' ) && ( is_cart() || is_checkout() || is_account_page() );
+?>
+<div class="prd-wrap <?php echo $is_shop_page ? 'prd-wc-page' : 'prd-text-page'; ?>">
+  <?php while ( have_posts() ) : the_post(); ?>
+    <article>
+      <h1 class="prd-h1 prd-page-title"><?php the_title(); ?></h1>
+      <?php if ( function_exists( 'is_cart' ) && is_cart() ) prdrwndn_cart_extras(); ?>
+      <div class="prd-content">
+        <?php the_content(); ?>
+      </div>
+    </article>
+  <?php endwhile; ?>
+</div>
 <?php get_footer(); ?>

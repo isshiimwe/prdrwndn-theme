@@ -1,53 +1,40 @@
 <?php
 /**
- * WooCommerce Product Card Template Override
- * Controls how each product card looks in the shop grid
+ * Product card (shop grid, related products, homepage "Flags & more").
  */
-
 defined( 'ABSPATH' ) || exit;
 
 global $product;
 if ( empty( $product ) || ! $product->is_visible() ) return;
 
-$img_id  = $product->get_image_id();
-$img_url = $img_id ? wp_get_attachment_image_url( $img_id, 'medium' ) : wc_placeholder_img_src();
-$link    = $product->get_permalink();
-$name    = $product->get_name();
-$price   = $product->get_price_html();
-$is_sale = $product->is_on_sale();
+$name      = $product->get_name();
+$link      = $product->get_permalink();
+$front     = prdrwndn_product_img( $product, 'woocommerce_thumbnail', 0 ) ?: wc_placeholder_img_src( 'woocommerce_thumbnail' );
+$is_jersey = prdrwndn_is_jersey( $product->get_id() );
+$back      = $is_jersey ? prdrwndn_product_img( $product, 'woocommerce_thumbnail', 1 ) : '';
+$sizes     = $is_jersey ? prdrwndn_sizes( $product ) : [];
+$low       = $sizes ? prdrwndn_low_stock_note( $sizes ) : '';
 ?>
-
-<li <?php wc_product_class( '', $product ); ?>>
-  <a href="<?php echo esc_url( $link ); ?>" class="prdrwndn-product-card">
-
-    <!-- Image -->
-    <div class="prdrwndn-card-img-wrap">
-      <?php if ( $is_sale ) : ?>
-        <span class="prdrwndn-sale-badge"><?php echo esc_html__( 'Sale!', 'prdrwndn' ); ?></span>
-      <?php endif; ?>
-      <img
-        src="<?php echo esc_url( $img_url ); ?>"
-        alt="<?php echo esc_attr( $name ); ?>"
-        loading="lazy"
-      />
+<li <?php wc_product_class( 'prd-card-li', $product ); ?>>
+  <a href="<?php echo esc_url( $link ); ?>" class="prd-card<?php echo $back ? ' has-back' : ''; ?>">
+    <div class="prd-card-img">
+      <img class="prd-card-front" src="<?php echo esc_url( $front ); ?>" alt="<?php echo esc_attr( $name ); ?>" loading="lazy"/>
+      <?php if ( $back ) : ?><img class="prd-card-back" src="<?php echo esc_url( $back ); ?>" alt="" loading="lazy"/><?php endif; ?>
+      <span class="prd-card-badges">
+        <?php if ( ! $product->is_in_stock() ) : ?>
+          <span class="prd-badge prd-badge-out">Sold out</span>
+        <?php elseif ( $product->is_on_sale() ) : ?>
+          <span class="prd-badge prd-badge-sale">Sale</span>
+        <?php endif; ?>
+        <?php if ( $is_jersey && prdrwndn_deal_on() && $product->is_in_stock() ) : ?>
+          <span class="prd-badge prd-badge-deal"><?php echo esc_html( prdrwndn_deal_label() ); ?></span>
+        <?php endif; ?>
+      </span>
     </div>
-
-    <!-- Info -->
-    <div class="prdrwndn-card-info">
-      <h3 class="prdrwndn-card-name"><?php echo esc_html( $name ); ?></h3>
-      <div class="prdrwndn-card-price"><?php echo wp_kses_post( $price ); ?></div>
+    <div class="prd-card-body">
+      <h3 class="prd-card-name"><?php echo esc_html( $name ); ?></h3>
+      <div class="prd-card-price"><?php echo wp_kses_post( $product->get_price_html() ); ?></div>
+      <?php if ( $low ) : ?><p class="prd-low"><?php echo esc_html( $low ); ?></p><?php endif; ?>
     </div>
-
-    <!-- CTA -->
-    <div class="prdrwndn-card-cta">
-      <?php if ( $product->is_type( 'variable' ) ) : ?>
-        <span class="prdrwndn-cta-btn">Select options</span>
-      <?php elseif ( $product->is_type( 'external' ) ) : ?>
-        <span class="prdrwndn-cta-btn"><?php echo esc_html( $product->get_button_text() ); ?></span>
-      <?php else : ?>
-        <span class="prdrwndn-cta-btn">Add to cart</span>
-      <?php endif; ?>
-    </div>
-
   </a>
 </li>
