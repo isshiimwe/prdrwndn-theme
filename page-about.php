@@ -44,6 +44,25 @@ $img = get_template_directory_uri() . '/assets/img/';
   </div>
 </section>
 
+<?php
+/* From the founder: the About page's own text (edit it in Pages → About). */
+$prd_story = get_post_field( 'post_content', get_queried_object_id() );
+if ( trim( wp_strip_all_tags( (string) $prd_story ) ) !== '' ) : ?>
+<section class="prd-founder" id="founder">
+  <div class="prd-wrap prd-founder-grid">
+    <div class="prd-founder-head">
+      <div class="prd-eyebrow">From the founder</div>
+      <h2 class="prd-h2">My story.</h2>
+      <?php prdrwndn_flag_stripe( 'prd-flag-mini' ); ?>
+    </div>
+    <div class="prd-founder-body">
+      <?php echo apply_filters( 'the_content', $prd_story ); // phpcs:ignore ?>
+      <p class="prd-founder-sign"><a href="https://instagram.com/isshiimwe" target="_blank" rel="noopener">Kanyarwanda</a> · Founder · Phoenix, Arizona</p>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
+
 <section class="prd-story">
   <?php prdrwndn_imigongo(); ?>
   <div class="prd-wrap prd-story-grid">

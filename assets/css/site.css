@@ -756,3 +756,14 @@ html.prd-in-app #wpadminbar { display: none !important; }
 html.prd-in-app body.prd { padding-bottom: env(safe-area-inset-bottom, 0px); }
 html.prd-in-app { margin-top: 0 !important; }
 html.prd-in-app .prd-page-title { display: none; }
+
+/* ── About: From the founder ── */
+.prd-founder { background: var(--prd-paper); border-top: 1px solid var(--prd-line); }
+.prd-founder-grid { display: grid; gap: 28px; padding-top: clamp(56px, 8vw, 104px); padding-bottom: clamp(56px, 8vw, 104px); }
+@media (min-width: 900px) { .prd-founder-grid { grid-template-columns: 1fr 1.6fr; gap: 64px; align-items: start; } .prd-founder-head { position: sticky; top: 110px; } }
+.prd-founder-head .prd-h2 { margin: 10px 0 18px; }
+.prd-founder-body { font-size: 17px; line-height: 1.75; color: var(--prd-ink-2); max-width: 62ch; }
+.prd-founder-body p { margin: 0 0 1.1em; }
+.prd-founder-body > p:first-child { font-family: var(--prd-serif); font-style: italic; font-size: clamp(26px, 3vw, 34px); line-height: 1.25; color: var(--prd-ink); }
+.prd-founder-sign { margin-top: 1.6em !important; padding-top: 18px; border-top: 1px solid var(--prd-line); font-size: 15px; color: var(--prd-muted); }
+.prd-founder-sign a { color: var(--prd-forest); font-weight: 700; text-decoration: none; }
