@@ -1,9 +1,9 @@
 /*
  * PRDRWNDN app service worker - version __VERSION__
  *
- * The installed app is the website itself, opened full screen.
+ * The installed app is /app/ (served by the theme).
  * This worker only does two things:
- *   1. Sends the old app address (/app.html) to the home page.
+ *   1. Sends the old app address (/app.html) to /app/.
  *   2. Keeps a copy of pages you have visited, so the app still
  *      opens with no signal (cart, checkout and account are never kept).
  *
@@ -54,9 +54,9 @@ self.addEventListener('fetch', function (event) {
   var url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Phones that installed the old app still open /app.html: send them home.
+  // Phones that installed the old app still open /app.html: send them to the new app.
   if (url.pathname === '/app.html') {
-    event.respondWith(Response.redirect('/', 302));
+    event.respondWith(Response.redirect('/app/', 302));
     return;
   }
 

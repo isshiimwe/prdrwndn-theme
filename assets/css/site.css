@@ -734,3 +734,25 @@ html.prd-standalone .prd-app-link { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .prd-app-banner, .prd-app-panel, .prd-app-backdrop { transition: none; }
 }
+
+/* ── App mode: checkout opened from the app (/app/) ──
+   inc/app.php adds html.prd-in-app; the site header and footer give way to a slim bar. */
+.prd-appbar { display: none; }
+html.prd-in-app .prd-appbar {
+  position: sticky; top: 0; z-index: 200; display: flex; align-items: center; gap: 8px;
+  height: calc(56px + env(safe-area-inset-top, 0px)); padding: env(safe-area-inset-top, 0px) 12px 0;
+  background: var(--prd-paper); border-bottom: 1px solid var(--prd-line); font-family: var(--prd-body);
+}
+.prd-appbar-back { display: inline-flex; align-items: center; gap: 2px; font-weight: 600; color: var(--prd-forest); text-decoration: none; min-height: 44px; }
+.prd-appbar-title { flex: 1; text-align: center; font-family: var(--prd-display); font-size: 24px; line-height: 1; padding-top: 3px; margin-right: 24px; }
+.prd-appbar-lock { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--prd-muted); }
+html.prd-in-app .prd-topbar,
+html.prd-in-app .prd-header,
+html.prd-in-app .prd-menu,
+html.prd-in-app .prd-footer,
+html.prd-in-app .prd-app-banner,
+html.prd-in-app .prd-back,
+html.prd-in-app #wpadminbar { display: none !important; }
+html.prd-in-app body.prd { padding-bottom: env(safe-area-inset-bottom, 0px); }
+html.prd-in-app { margin-top: 0 !important; }
+html.prd-in-app .prd-page-title { display: none; }

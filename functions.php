@@ -712,7 +712,7 @@ function prdrwndn_cart_extras() {
 
 /* ════════════════════════════════════════════════════
    8. APP — HOME-SCREEN APP (PWA)
-   The installed app is the website itself, opened full screen.
+   The installed app opens /app/ (see inc/app.php); payment uses the site's checkout.
    • <head>: manifest link, theme colour, iPhone home-screen tags.
    • Footer: the "Get the app" banner and how-to sheet (assets/js/app.js).
      Closing either one hides the banner for 30 days on that phone.
@@ -720,7 +720,10 @@ function prdrwndn_cart_extras() {
      the site root. Tools → PRDRWNDN App writes them from this theme
      (templates in assets/app/). Bump PRDRWNDN_APP_VERSION when they change.
 ════════════════════════════════════════════════════ */
-define( 'PRDRWNDN_APP_VERSION', '2.1.0' );
+define( 'PRDRWNDN_APP_VERSION', '2.2.0' );
+
+// The app itself (/app/), its REST API, Face ID sign-in and order tracking.
+require_once get_template_directory() . '/inc/app.php';
 
 function prdrwndn_app_icon( $file ) {
     return wp_make_link_relative( get_template_directory_uri() . '/assets/img/' . $file );
@@ -734,17 +737,19 @@ function prdrwndn_pwa_head() { ?>
     <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
     <meta name="apple-mobile-web-app-title" content="PRDRWNDN"/>
     <link rel="apple-touch-icon" href="<?php echo esc_url( get_template_directory_uri() . '/assets/img/apple-touch-icon.png' ); ?>"/>
-<?php }
-add_action( 'wp_head', 'prdrwndn_pwa_head' );
+<?php if ( is_front_page() ) : ?>
+    <script>/* Opened from the home screen on the old start page: go to the app. */try{if((matchMedia('(display-mode: standalone)').matches||navigator.standalone===true)&&top===self&&!/[?&]site=1/.test(location.search))location.replace('/app/'+location.hash)}catch(e){}</script>
+<?php endif;
+}
+add_action( 'wp_head', 'prdrwndn_pwa_head', 2 );
 
 /** Contents of the root manifest.json (ASCII only — iOS chokes on ® and —). */
 function prdrwndn_app_manifest() {
-    $path = function ( $url ) { return wp_make_link_relative( $url ) ?: '/'; };
     $icon = prdrwndn_app_icon( 'app-icon-192.png' );
     $shortcuts = [
-        [ 'name' => 'Jerseys',        'url' => $path( prdrwndn_cat_url( 'prd_jersey_cat' ) ) ],
-        [ 'name' => 'Car fresheners', 'url' => $path( prdrwndn_cat_url( 'prd_fresh_cat' ) ) ],
-        [ 'name' => 'Cart',           'url' => $path( class_exists( 'WooCommerce' ) ? wc_get_cart_url() : home_url( '/cart/' ) ) ],
+        [ 'name' => 'Jerseys',        'url' => '/app/#shop/jerseys' ],
+        [ 'name' => 'Car fresheners', 'url' => '/app/#shop/fresh' ],
+        [ 'name' => 'Cart',           'url' => '/app/#cart' ],
     ];
     foreach ( $shortcuts as &$s ) {
         $s['short_name'] = $s['name'];
@@ -758,12 +763,12 @@ function prdrwndn_app_manifest() {
         'name'             => 'PRDRWNDN - Proud Rwandan',
         'short_name'       => 'PRDRWNDN',
         'description'      => 'Rwanda jerseys, map-shaped car fresheners, flags and more. Ships from Phoenix, AZ.',
-        'start_url'        => '/',
+        'start_url'        => '/app/',
         'scope'            => '/',
         'display'          => 'standalone',
         'orientation'      => 'portrait',
         'background_color' => '#F7F3EC',
-        'theme_color'      => '#FFFDF9',
+        'theme_color'      => '#F7F3EC',
         'lang'             => 'en-US',
         'categories'       => [ 'shopping', 'lifestyle' ],
         'icons'            => [
