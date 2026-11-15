@@ -721,9 +721,12 @@ function prdrwndn_cart_extras() {
 }
 
 
-/** Keep titles as typed: WordPress turns " - " into a long dash; put the plain hyphen back. */
+/** Keep text as typed: WordPress turns " - " into a long dash; put the plain hyphen back. */
 add_filter( 'the_title', function ( $title ) {
     return str_replace( [ '&#8211;', '&#8212;', '–', '—' ], '-', (string) $title );
+}, 11 );
+add_filter( 'the_content', function ( $content ) {
+    return str_replace( [ ' &#8211; ', ' &#8212; ', ' – ', ' — ' ], ' - ', (string) $content );
 }, 11 );
 
 /** Price ranges read "$5 to $10" instead of using a dash. */
