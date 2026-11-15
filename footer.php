@@ -36,7 +36,7 @@ $prd_wa   = prdrwndn_whatsapp_url( 'Hi PRDRWNDN!' );
           <li><a href="tel:+14803827077">+1 (480) 382-7077</a></li>
           <?php if ( class_exists( 'WooCommerce' ) ) : ?><li><a href="<?php echo esc_url( wc_get_page_permalink( 'myaccount' ) ); ?>">My account</a></li><?php endif; ?>
           <li><a href="<?php echo esc_url( home_url( '/about/' ) ); ?>">About</a></li>
-          <li><a href="<?php echo esc_url( home_url( '/app.html' ) ); ?>">Get the app</a></li>
+          <li class="prd-app-link"><a href="<?php echo esc_url( home_url( '/#get-app' ) ); ?>" data-prd-app-sheet>Get the app</a></li>
         </ul>
       </div>
 

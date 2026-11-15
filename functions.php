@@ -19,7 +19,7 @@
  *  5. Customizer           — live preview settings
  *  6. Helper Functions     — reusable template helpers
  *  7. Jerseys              — 2-for-$80 deal, product page extras, cart add-on
- *  8. PWA                  — manifest + service worker
+ *  8. App (PWA)            — home-screen app, install prompt, root files
  *  9. AJAX                 — cart count endpoint
  * 10. Gutenberg            — disable on custom templates
  * 11. GitHub auto-updater, shop template, newsletter
@@ -92,6 +92,14 @@ function prdrwndn_assets() {
         true
     );
 
+    wp_enqueue_script(
+        'prdrwndn-app',
+        get_template_directory_uri() . '/assets/js/app.js',
+        [],
+        $v,
+        true
+    );
+
     if ( class_exists( 'WooCommerce' ) &&
          ( is_shop() || is_product() || is_product_category() || is_cart() || is_checkout() )
     ) {
@@ -108,7 +116,7 @@ function prdrwndn_assets() {
         'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
         'nonce'    => wp_create_nonce( 'prdrwndn_nonce' ),
         'cartUrl'  => class_exists( 'WooCommerce' ) ? wc_get_cart_url() : home_url( '/cart/' ),
-        'appUrl'   => home_url( '/app.html' ),
+        'appUrl'   => home_url( '/#get-app' ),
         'siteUrl'  => home_url(),
         'whatsapp' => prdrwndn_whatsapp_number(),
     ] );
@@ -703,26 +711,220 @@ function prdrwndn_cart_extras() {
 
 
 /* ════════════════════════════════════════════════════
-   8. PWA — PROGRESSIVE WEB APP
+   8. APP — HOME-SCREEN APP (PWA)
+   The installed app is the website itself, opened full screen.
+   • <head>: manifest link, theme colour, iPhone home-screen tags.
+   • Footer: the "Get the app" banner and how-to sheet (assets/js/app.js).
+     Closing either one hides the banner for 30 days on that phone.
+   • Root files: manifest.json, service-worker.js and app.html live in
+     the site root. Tools → PRDRWNDN App writes them from this theme
+     (templates in assets/app/). Bump PRDRWNDN_APP_VERSION when they change.
 ════════════════════════════════════════════════════ */
+define( 'PRDRWNDN_APP_VERSION', '2.1.0' );
+
+function prdrwndn_app_icon( $file ) {
+    return wp_make_link_relative( get_template_directory_uri() . '/assets/img/' . $file );
+}
+
 function prdrwndn_pwa_head() { ?>
     <link rel="manifest" href="<?php echo esc_url( home_url( '/manifest.json' ) ); ?>"/>
-    <meta name="theme-color" content="#1E3B2F"/>
+    <meta name="theme-color" content="#FFFDF9"/>
     <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
     <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
     <meta name="apple-mobile-web-app-title" content="PRDRWNDN"/>
-    <link rel="apple-touch-icon" href="<?php echo esc_url( get_site_icon_url( 180 ) ?: get_template_directory_uri() . '/assets/img/apple-touch-icon.png' ); ?>"/>
+    <link rel="apple-touch-icon" href="<?php echo esc_url( get_template_directory_uri() . '/assets/img/apple-touch-icon.png' ); ?>"/>
 <?php }
 add_action( 'wp_head', 'prdrwndn_pwa_head' );
 
-function prdrwndn_pwa_footer() { ?>
+/** Contents of the root manifest.json (ASCII only — iOS chokes on ® and —). */
+function prdrwndn_app_manifest() {
+    $path = function ( $url ) { return wp_make_link_relative( $url ) ?: '/'; };
+    $icon = prdrwndn_app_icon( 'app-icon-192.png' );
+    $shortcuts = [
+        [ 'name' => 'Jerseys',        'url' => $path( prdrwndn_cat_url( 'prd_jersey_cat' ) ) ],
+        [ 'name' => 'Car fresheners', 'url' => $path( prdrwndn_cat_url( 'prd_fresh_cat' ) ) ],
+        [ 'name' => 'Cart',           'url' => $path( class_exists( 'WooCommerce' ) ? wc_get_cart_url() : home_url( '/cart/' ) ) ],
+    ];
+    foreach ( $shortcuts as &$s ) {
+        $s['short_name'] = $s['name'];
+        $s['icons']      = [ [ 'src' => $icon, 'sizes' => '192x192', 'type' => 'image/png' ] ];
+    }
+    unset( $s );
+
+    $manifest = [
+        // Same id as the old app, so phones that installed it get this update.
+        'id'               => '/app.html',
+        'name'             => 'PRDRWNDN - Proud Rwandan',
+        'short_name'       => 'PRDRWNDN',
+        'description'      => 'Rwanda jerseys, map-shaped car fresheners, flags and more. Ships from Phoenix, AZ.',
+        'start_url'        => '/',
+        'scope'            => '/',
+        'display'          => 'standalone',
+        'orientation'      => 'portrait',
+        'background_color' => '#F7F3EC',
+        'theme_color'      => '#FFFDF9',
+        'lang'             => 'en-US',
+        'categories'       => [ 'shopping', 'lifestyle' ],
+        'icons'            => [
+            [ 'src' => $icon, 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any' ],
+            [ 'src' => prdrwndn_app_icon( 'app-icon-512.png' ), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any' ],
+            [ 'src' => prdrwndn_app_icon( 'app-icon-maskable-512.png' ), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable' ],
+        ],
+        'shortcuts'        => $shortcuts,
+    ];
+    return wp_json_encode( $manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) . "\n";
+}
+
+/** What each root file should contain, from this theme. */
+function prdrwndn_app_files() {
+    $dir  = get_template_directory() . '/assets/app/';
+    $read = function ( $f ) use ( $dir ) {
+        $c = file_exists( $dir . $f ) ? file_get_contents( $dir . $f ) : '';
+        return str_replace( '__VERSION__', PRDRWNDN_APP_VERSION, (string) $c );
+    };
+    return [
+        'manifest.json'     => prdrwndn_app_manifest(),
+        'service-worker.js' => $read( 'service-worker.js' ),
+        'app.html'          => $read( 'app.html' ),
+    ];
+}
+
+/** [ file => 'ok' | 'old' | 'missing' ] for the files in the site root. */
+function prdrwndn_app_status() {
+    $out = [];
+    foreach ( prdrwndn_app_files() as $file => $want ) {
+        $p = ABSPATH . $file;
+        $out[ $file ] = ! file_exists( $p ) ? 'missing' : ( md5_file( $p ) === md5( $want ) ? 'ok' : 'old' );
+    }
+    return $out;
+}
+
+/** Tools → PRDRWNDN App */
+add_action( 'admin_menu', function () {
+    add_management_page( 'PRDRWNDN App', 'PRDRWNDN App', 'manage_options', 'prdrwndn-app', 'prdrwndn_app_page' );
+} );
+
+function prdrwndn_app_page() {
+    $status = prdrwndn_app_status();
+    $labels = [ 'ok' => 'Up to date', 'old' => 'Old version', 'missing' => 'Missing' ];
+    $done   = isset( $_GET['prd-app'] ) ? sanitize_key( $_GET['prd-app'] ) : '';
+    ?>
+    <div class="wrap">
+      <h1>PRDRWNDN App</h1>
+      <p>The app people add to their home screen is your website, opened full screen. These three files in your site's main folder tell phones how to install and open it. This button writes them from the theme (version <?php echo esc_html( PRDRWNDN_APP_VERSION ); ?>). Old copies are saved to <code>wp-content/uploads/prdrwndn-backup/</code> first.</p>
+      <?php if ( 'updated' === $done ) : ?><div class="notice notice-success"><p>App files updated.</p></div><?php endif; ?>
+      <?php if ( 'failed' === $done ) : ?><div class="notice notice-error"><p>Some files could not be written. Check the folder permissions in Hostinger's File Manager.</p></div><?php endif; ?>
+      <table class="widefat striped" style="max-width:560px">
+        <thead><tr><th>File</th><th>Status</th></tr></thead>
+        <tbody>
+        <?php foreach ( $status as $file => $s ) : ?>
+          <tr><td><a href="<?php echo esc_url( home_url( '/' . $file ) ); ?>" target="_blank"><code>/<?php echo esc_html( $file ); ?></code></a></td>
+              <td><?php echo esc_html( $labels[ $s ] ); ?></td></tr>
+        <?php endforeach; ?>
+        </tbody>
+      </table>
+      <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top:16px">
+        <input type="hidden" name="action" value="prdrwndn_app_update"/>
+        <?php wp_nonce_field( 'prdrwndn_app_update' ); ?>
+        <?php submit_button( 'Update app files', 'primary', 'submit', false ); ?>
+      </form>
+    </div>
+    <?php
+}
+
+add_action( 'admin_post_prdrwndn_app_update', function () {
+    if ( ! current_user_can( 'manage_options' ) ) wp_die( 'Not allowed.' );
+    check_admin_referer( 'prdrwndn_app_update' );
+
+    $up     = wp_upload_dir();
+    $backup = trailingslashit( $up['basedir'] ) . 'prdrwndn-backup/app-' . gmdate( 'Ymd-His' ) . '/';
+    $ok     = true;
+
+    foreach ( prdrwndn_app_files() as $file => $content ) {
+        $target = ABSPATH . $file;
+        if ( '' === $content ) { $ok = false; continue; }
+        if ( file_exists( $target ) ) {
+            if ( md5_file( $target ) === md5( $content ) ) continue;
+            wp_mkdir_p( $backup );
+            @copy( $target, $backup . $file );
+        }
+        if ( false === @file_put_contents( $target, $content ) ) $ok = false;
+    }
+
+    wp_safe_redirect( admin_url( 'tools.php?page=prdrwndn-app&prd-app=' . ( $ok ? 'updated' : 'failed' ) ) );
+    exit;
+} );
+
+/** Nudge on the Dashboard and Themes screens when the root files are out of date. */
+add_action( 'admin_notices', function () {
+    if ( ! current_user_can( 'manage_options' ) ) return;
+    $screen = get_current_screen();
+    if ( ! $screen || ! in_array( $screen->id, [ 'dashboard', 'themes' ], true ) ) return;
+    $status = prdrwndn_app_status();
+    if ( ! in_array( 'old', $status, true ) && ! in_array( 'missing', $status, true ) ) return;
+    echo '<div class="notice notice-warning"><p>The PRDRWNDN app files need an update. <a href="' . esc_url( admin_url( 'tools.php?page=prdrwndn-app' ) ) . '">Update them now</a>.</p></div>';
+} );
+
+/** Banner + how-to sheet, printed at the bottom of every front-end page. */
+function prdrwndn_app_prompt() {
+    if ( is_admin() || is_customize_preview() ) return;
+    $icon  = get_template_directory_uri() . '/assets/img/app-icon-192.png';
+    $close = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+    $share = '<svg class="prd-app-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
+    $plus  = '<svg class="prd-app-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
+    $dots  = '<svg class="prd-app-ico" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
+    ?>
+<div class="prd-app-banner" id="prd-app-banner" role="region" aria-label="Get the app" hidden>
+  <button type="button" class="prd-app-banner-x" data-prd-app-dismiss aria-label="Close"><?php echo $close; // phpcs:ignore ?></button>
+  <button type="button" class="prd-app-banner-open" data-prd-app-open>
+    <img src="<?php echo esc_url( $icon ); ?>" alt="" width="40" height="40"/>
+    <span class="prd-app-banner-text"><strong>PRDRWNDN app</strong><span>Add to home screen</span></span>
+    <span class="prd-app-banner-get">Get</span>
+  </button>
+</div>
+<div class="prd-app-sheet" id="prd-app-sheet" hidden>
+  <div class="prd-app-backdrop" data-prd-app-close></div>
+  <div class="prd-app-panel" role="dialog" aria-modal="true" aria-labelledby="prd-app-title" tabindex="-1">
+    <span class="prd-app-stripe" aria-hidden="true"></span>
+    <button type="button" class="prd-app-close" data-prd-app-close aria-label="Close"><?php echo $close; // phpcs:ignore ?></button>
+    <div class="prd-app-head">
+      <img src="<?php echo esc_url( $icon ); ?>" alt="" width="64" height="64"/>
+      <div>
+        <h2 id="prd-app-title">Get the PRDRWNDN app</h2>
+        <p>Jerseys, car fresheners and more, one tap from your home screen. Free, no App Store needed.</p>
+      </div>
+    </div>
+
+    <ol class="prd-app-steps" data-for="ios">
+      <li>Tap the <strong>Share</strong> button <?php echo $share; // phpcs:ignore ?><small>In Safari it's in the bottom bar (tap ••• first if you don't see it). In Chrome it's at the top right.</small></li>
+      <li>Tap <strong>Add to Home Screen</strong> <?php echo $plus; // phpcs:ignore ?><small>Scroll down the list if you don't see it.</small></li>
+      <li>Tap <strong>Add</strong>. The PRDRWNDN icon lands on your home screen.</li>
+    </ol>
+    <ol class="prd-app-steps" data-for="android">
+      <li>Tap the browser menu <?php echo $dots; // phpcs:ignore ?><small>Top right of the screen.</small></li>
+      <li>Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+      <li>Tap <strong>Install</strong>. The PRDRWNDN icon lands on your home screen.</li>
+    </ol>
+    <p class="prd-app-desk" data-for="desktop">Open <strong>proudrwandan.com</strong> on your phone, then tap <strong>Get the app</strong> at the bottom of any page.</p>
+
+    <div class="prd-app-actions">
+      <button type="button" class="prd-btn prd-btn-primary prd-btn-block" data-prd-app-install hidden>Install the app</button>
+      <button type="button" class="prd-btn prd-btn-ghost prd-btn-block" data-prd-app-close>Got it</button>
+    </div>
+  </div>
+</div>
+    <?php
+}
+add_action( 'wp_footer', 'prdrwndn_app_prompt', 5 );
+
+/** Register the service worker (the file in the site root). */
+function prdrwndn_pwa_footer() {
+    if ( is_admin() || is_customize_preview() ) return; ?>
 <script>
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        navigator.serviceWorker
-            .register('/service-worker.js', { scope: '/' })
-            .then(function(r) { console.log('[PRDRWNDN] SW registered:', r.scope); })
-            .catch(function(e) { console.warn('[PRDRWNDN] SW failed:', e); });
+    window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/service-worker.js', { scope: '/' }).catch(function () {});
     });
 }
 </script>
