@@ -304,6 +304,7 @@
     if (C.whatsapp) r += '<a class="row" href="https://wa.me/' + esc(C.whatsapp) + '?text=' + encodeURIComponent('Hi PRDRWNDN!') + '" target="_blank" rel="noopener"><span class="row-ico">' + I.wa + '</span><span class="row-text">WhatsApp us<small>Fastest reply</small></span><span class="row-end">' + I.chev + '</span></a>';
     r += '<a class="row" href="mailto:' + esc(C.email) + '"><span class="row-ico">' + I.mail + '</span><span class="row-text">Email<small>' + esc(C.email) + '</small></span><span class="row-end">' + I.chev + '</span></a>';
     r += '<button class="row" type="button" data-share><span class="row-ico">' + I.share + '</span><span class="row-text">Share PRDRWNDN</span><span class="row-end">' + I.chev + '</span></button>';
+    if (C.privacy) r += '<a class="row" href="' + esc(C.privacy) + '"><span class="row-ico">' + I.lock.replace('width="14" height="14"', 'width="18" height="18"') + '</span><span class="row-text">Privacy policy</span><span class="row-end">' + I.chev + '</span></a>';
     return r;
   }
 

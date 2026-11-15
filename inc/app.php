@@ -63,6 +63,7 @@ function prdrwndn_app_config() {
         'checkout'  => $wc ? wc_get_checkout_url() : home_url( '/checkout/' ),
         'account'   => $account,
         'lostPass'  => $wc ? wc_lostpassword_url() : wp_lostpassword_url(),
+        'privacy'   => get_privacy_policy_url(),
         'canRegister' => $wc && 'yes' === get_option( 'woocommerce_enable_myaccount_registration' ),
         'cats'      => $cats,
         'deal'      => [ 'on' => prdrwndn_deal_on(), 'price' => (int) prd_mod( 'prd_deal_price' ), 'label' => prdrwndn_deal_label() ],

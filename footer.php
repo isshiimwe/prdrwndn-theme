@@ -37,6 +37,7 @@ $prd_wa   = prdrwndn_whatsapp_url( 'Hi PRDRWNDN!' );
           <?php if ( class_exists( 'WooCommerce' ) ) : ?><li><a href="<?php echo esc_url( wc_get_page_permalink( 'myaccount' ) ); ?>">My account</a></li><?php endif; ?>
           <li><a href="<?php echo esc_url( home_url( '/about/' ) ); ?>">About</a></li>
           <li class="prd-app-link"><a href="<?php echo esc_url( home_url( '/#get-app' ) ); ?>" data-prd-app-sheet>Get the app</a></li>
+          <?php if ( get_privacy_policy_url() ) : ?><li><a href="<?php echo esc_url( get_privacy_policy_url() ); ?>">Privacy policy</a></li><?php endif; ?>
         </ul>
       </div>
 
