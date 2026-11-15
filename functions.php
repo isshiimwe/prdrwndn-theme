@@ -236,6 +236,7 @@ function prdrwndn_defaults() {
         'prd_pickup_text'         => 'Free pickup in Phoenix, AZ',
         'prd_whatsapp'            => '+1 480 382 7077',
         'prd_announce'            => '2 jerseys for $80 · Ships from Phoenix, AZ',
+        'prd_founder_photo'       => 0,
         'prdrwndn_footer_desc'    => 'Rwanda-heritage goods: football jerseys, map-shaped car fresheners, flags and apparel — for the global Rwandan community.',
     ];
 }
@@ -307,6 +308,16 @@ function prdrwndn_customizer( $wp_customize ) {
     $wp_customize->add_section( 'prd_contact', [ 'title' => __( 'Contact & top bar', 'prdrwndn' ), 'panel' => 'prdrwndn_panel' ] );
     $add( 'prd_contact', 'prd_whatsapp', 'WhatsApp number', 'text', 'sanitize_text_field', 'With country code, e.g. +1 480 382 7077. Used for every "Order on WhatsApp" button.' );
     $add( 'prd_contact', 'prd_announce', 'Top bar message', 'text', 'sanitize_text_field', 'Leave empty to hide the top bar.' );
+
+    /* About page */
+    $wp_customize->add_section( 'prd_about', [ 'title' => __( 'About page', 'prdrwndn' ), 'panel' => 'prdrwndn_panel', 'description' => __( 'The founder story itself is the text of Pages → About.', 'prdrwndn' ) ] );
+    $wp_customize->add_setting( 'prd_founder_photo', [ 'default' => 0, 'sanitize_callback' => 'absint' ] );
+    $wp_customize->add_control( new WP_Customize_Media_Control( $wp_customize, 'prd_founder_photo', [
+        'label'     => __( 'Founder photo', 'prdrwndn' ),
+        'description' => __( 'Shown beside "My story". Square photos work best.', 'prdrwndn' ),
+        'section'   => 'prd_about',
+        'mime_type' => 'image',
+    ] ) );
 
     /* Footer */
     $wp_customize->add_section( 'prdrwndn_footer', [ 'title' => __( 'Footer', 'prdrwndn' ), 'panel' => 'prdrwndn_panel' ] );

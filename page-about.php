@@ -54,6 +54,12 @@ if ( trim( wp_strip_all_tags( (string) $prd_story ) ) !== '' ) : ?>
       <div class="prd-eyebrow">From the founder</div>
       <h2 class="prd-h2">My story.</h2>
       <?php prdrwndn_flag_stripe( 'prd-flag-mini' ); ?>
+      <?php $prd_photo = (int) prd_mod( 'prd_founder_photo' );
+      if ( $prd_photo && wp_attachment_is_image( $prd_photo ) ) : ?>
+        <figure class="prd-founder-photo">
+          <?php echo wp_get_attachment_image( $prd_photo, 'large', false, [ 'loading' => 'lazy', 'sizes' => '(min-width: 900px) 360px, 80vw' ] ); ?>
+        </figure>
+      <?php endif; ?>
     </div>
     <div class="prd-founder-body">
       <?php echo apply_filters( 'the_content', $prd_story ); // phpcs:ignore ?>
