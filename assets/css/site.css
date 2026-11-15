@@ -531,7 +531,8 @@ a.prd-info-item:hover { border-color: var(--prd-ink); }
 .prd-details-body a { color: var(--prd-forest); font-weight: 600; }
 .prd-table-wrap { overflow-x: auto; margin-top: 12px; }
 .prd-size-table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
-.prd-size-table th, .prd-size-table td { border-bottom: 1px solid var(--prd-line); padding: 8px 10px; text-align: left; }
+.prd-size-table th, .prd-size-table td { border-bottom: 1px solid var(--prd-line); padding: 8px 10px; text-align: left; white-space: nowrap; }
+.prd-table-wrap { -webkit-overflow-scrolling: touch; }
 .prd-size-table thead th { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--prd-muted); }
 
 .prd-addon { display: flex; gap: 14px; align-items: center; margin: 22px 0 0; padding: 14px; border-radius: var(--prd-radius); background: var(--prd-paper); border: 1px dashed var(--prd-line); }
