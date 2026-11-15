@@ -253,6 +253,7 @@
     if (Number(t.total_discount)) rows += '<div class="save"><span>Coupon</span><span>' + money(-minor(t.total_discount, unit)) + '</span></div>';
     var shipKnown = c.shipping_rates && c.shipping_rates.some(function (pk) { return pk.shipping_rates.some(function (r) { return r.selected; }); });
     rows += '<div><span>Shipping</span><span>' + (shipKnown ? money(minor(t.total_shipping, unit)) : 'At checkout') + '</span></div>';
+    if (Number(t.total_tax)) rows += '<div><span>Tax</span><span>' + money(minor(t.total_tax, unit)) + '</span></div>';
     rows += '<div class="grand"><span>' + (shipKnown ? 'Total' : 'Total so far') + '</span><span>' + money(minor(t.total_price, unit)) + '</span></div>';
     h += '<div class="totals">' + rows + (C.pickup ? '<small>' + esc(C.pickup) + ' — choose it at checkout.</small>' : '') + '</div>';
     h += '<div class="pay"><button class="btn btn-primary btn-block" type="button" data-checkout>' + I.lock + ' Checkout</button>' +
