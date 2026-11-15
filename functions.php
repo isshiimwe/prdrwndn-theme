@@ -737,6 +737,7 @@ function prdrwndn_pwa_head() { ?>
     <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
     <meta name="apple-mobile-web-app-title" content="PRDRWNDN"/>
     <link rel="apple-touch-icon" href="<?php echo esc_url( get_template_directory_uri() . '/assets/img/apple-touch-icon.png' ); ?>"/>
+<?php if ( function_exists( 'prdrwndn_app_splash_links' ) ) prdrwndn_app_splash_links(); ?>
 <?php if ( is_front_page() ) : ?>
     <script>/* Opened from the home screen on the old start page: go to the app. */try{if((matchMedia('(display-mode: standalone)').matches||navigator.standalone===true)&&top===self&&!/[?&]site=1/.test(location.search))location.replace('/app/'+location.hash)}catch(e){}</script>
 <?php endif;

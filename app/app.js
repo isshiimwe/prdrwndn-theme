@@ -725,10 +725,10 @@
   try { firstOpen = sessionStorage.getItem('prdLaunched') !== '1'; sessionStorage.setItem('prdLaunched', '1'); } catch (e) {}
   if (!firstOpen) launch.classList.add('is-done');
   function hideLaunch() {
-    var wait = firstOpen ? Math.max(0, 1100 - (Date.now() - started)) : 0;
+    var wait = firstOpen ? Math.max(0, 600 - (Date.now() - started)) : 0;
     setTimeout(function () { launch.classList.add('is-done'); }, wait);
   }
-  setTimeout(hideLaunch, 2600); // never hold the launch screen longer than this
+  setTimeout(hideLaunch, 2200); // never hold the launch screen longer than this
 
   var bioCheck = (window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable)
     ? PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(function () { return false; }) : Promise.resolve(false);

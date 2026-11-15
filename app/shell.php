@@ -14,6 +14,11 @@ $prd_dir = get_template_directory_uri();
 <title>PRDRWNDN</title>
 <meta name="description" content="Rwanda jerseys, map-shaped car fresheners, flags and more."/>
 <meta name="theme-color" content="#F7F3EC"/>
+<meta name="color-scheme" content="light only"/>
+<style>/* First paint: cream, never black, launch screen visible before app.css loads. */
+html,body{margin:0;background:#F7F3EC;color-scheme:light}
+.launch{position:fixed;inset:0;z-index:100;background:#F7F3EC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+.launch-crest{width:120px;height:auto}.launch-logo{width:150px;height:auto}</style>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
@@ -21,6 +26,7 @@ $prd_dir = get_template_directory_uri();
 <link rel="manifest" href="<?php echo esc_url( home_url( '/manifest.json' ) ); ?>"/>
 <link rel="apple-touch-icon" href="<?php echo esc_url( $prd_dir . '/assets/img/apple-touch-icon.png' ); ?>"/>
 <link rel="icon" href="<?php echo esc_url( $prd_dir . '/assets/img/app-icon-192.png' ); ?>"/>
+<?php prdrwndn_app_splash_links(); ?>
 <link rel="preload" href="<?php echo esc_url( $prd_dir . '/assets/fonts/bebas-neue-latin-400-normal.woff2' ); ?>" as="font" type="font/woff2" crossorigin/>
 <link rel="preload" href="<?php echo esc_url( $prd_dir . '/assets/fonts/inter-latin-wght-normal.woff2' ); ?>" as="font" type="font/woff2" crossorigin/>
 <link rel="stylesheet" href="<?php echo esc_url( $prd_dir . '/app/app.css?v=' . $prd_v ); ?>"/>

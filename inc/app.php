@@ -90,6 +90,22 @@ function prdrwndn_app_size_chart() {
     return $rows;
 }
 
+/**
+ * iPhone launch pictures (apple-touch-startup-image). iOS shows these while the
+ * home-screen app starts, instead of a blank black/white screen. They match the
+ * app's own launch screen, so the two read as one. Files: assets/img/splash/.
+ */
+function prdrwndn_app_splash_links() {
+    $base = get_template_directory_uri() . '/assets/img/splash/';
+    $sizes = [ [ 440, 956, 3 ], [ 430, 932, 3 ], [ 420, 912, 3 ], [ 402, 874, 3 ], [ 393, 852, 3 ], [ 390, 844, 3 ], [ 428, 926, 3 ], [ 375, 812, 3 ], [ 414, 896, 3 ], [ 414, 896, 2 ], [ 414, 736, 3 ], [ 375, 667, 2 ] ];
+    foreach ( $sizes as $z ) {
+        printf(
+            '<link rel="apple-touch-startup-image" media="screen and (device-width: %1$dpx) and (device-height: %2$dpx) and (-webkit-device-pixel-ratio: %3$d) and (orientation: portrait)" href="%4$s"/>' . "\n",
+            $z[0], $z[1], $z[2], esc_url( $base . sprintf( 'splash-%dx%d@%dx.png', $z[0], $z[1], $z[2] ) )
+        );
+    }
+}
+
 /* ════════════════════════════════════════════════════
    3. SESSION — who is signed in
 ════════════════════════════════════════════════════ */

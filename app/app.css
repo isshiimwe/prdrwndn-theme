@@ -19,7 +19,7 @@
   --r: 16px;
 }
 *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 16px/1.5 var(--body); -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
+html, body { margin: 0; height: 100%; background: var(--bg); color-scheme: light; color: var(--ink); font: 16px/1.5 var(--body); -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
 body { overflow: hidden; }
 img { display: block; max-width: 100%; }
 a { color: inherit; text-decoration: none; }
@@ -32,13 +32,13 @@ h1, h2, h3, p { margin: 0; }
 
 /* ── Launch screen ── */
 .launch { position: fixed; inset: 0; z-index: 100; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: opacity .35s ease, visibility .35s; }
-.launch-crest { width: 120px; height: auto; animation: crest-in .7s cubic-bezier(.2, .9, .3, 1.3) both; }
-.launch-logo { width: 150px; height: auto; animation: fade-up .5s .35s ease both; }
-.launch-stripe { position: absolute; left: 0; right: 0; bottom: 0; height: calc(6px + var(--bottom)); background: linear-gradient(90deg, var(--green) 0 33.3%, var(--yellow) 33.3% 66.6%, var(--blue) 66.6%); transform-origin: left; animation: grow .8s .2s ease both; }
-.launch.is-done { opacity: 0; visibility: hidden; }
-@keyframes crest-in { from { opacity: 0; transform: scale(.6) rotate(-8deg); } to { opacity: 1; transform: none; } }
+/* Static on purpose: it continues the iPhone launch picture (assets/img/splash/) without a jump. */
+.launch-crest { width: 120px; height: auto; }
+.launch-logo { width: 150px; height: auto; }
+.launch-stripe { position: absolute; left: 0; right: 0; bottom: 0; height: calc(6px + var(--bottom)); background: linear-gradient(90deg, var(--green) 0 33.3%, var(--yellow) 33.3% 66.6%, var(--blue) 66.6%); }
+.launch.is-done { opacity: 0; visibility: hidden; transform: scale(1.04); }
+.launch { transition: opacity .3s ease, visibility .3s, transform .3s ease; }
 @keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-@keyframes grow { from { transform: scaleX(0); } to { transform: none; } }
 
 /* ── Top bar ── */
 .bar { position: fixed; top: 0; left: 0; right: 0; z-index: 20; height: calc(var(--bar-h) + var(--top)); padding: var(--top) 8px 0; display: flex; align-items: center; gap: 4px; background: color-mix(in srgb, var(--bg) 90%, transparent); -webkit-backdrop-filter: saturate(1.4) blur(14px); backdrop-filter: saturate(1.4) blur(14px); border-bottom: 1px solid transparent; transition: border-color .2s; }
