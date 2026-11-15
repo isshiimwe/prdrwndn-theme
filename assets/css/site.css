@@ -164,7 +164,8 @@ html body.prd {
   display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 12px;
 }
 .prd-brand { justify-self: center; display: inline-flex; align-items: center; text-decoration: none; color: var(--prd-ink) !important; }
-.prd-brand-img { height: 44px; width: auto; }
+/* Two classes deep so WooCommerce's ".woocommerce img { height: auto }" can't override it on shop pages. */
+.prd-header .prd-brand-img { height: 44px; width: auto; max-width: none; }
 .prd-wordmark { font-family: var(--prd-display); font-size: 28px; letter-spacing: .04em; line-height: 1; }
 .prd-wordmark sup { font-family: var(--prd-body); font-size: 11px; font-weight: 600; vertical-align: super; margin-left: 1px; }
 .prd-nav { display: none; }
@@ -200,7 +201,7 @@ html body.prd {
 
 @media (min-width: 961px) {
   .prd-header-in { grid-template-columns: auto 1fr auto; gap: 32px; height: 72px; }
-  .prd-brand-img { height: 52px; }
+  .prd-header .prd-brand-img { height: 52px; }
   .prd-menu-btn { display: none; }
   .prd-brand { justify-self: start; }
   .prd-nav { display: flex; gap: 26px; justify-content: center; }
@@ -218,7 +219,7 @@ html body.prd {
 .prd-footer-brand { grid-column: 1 / -1; max-width: 380px; }
 .prd-footer-brand p { color: #C9C2B3; font-size: 15px; margin-top: 14px; }
 .prd-footer-logo { display: inline-flex; }
-.prd-footer-logo-img { height: 96px; width: auto; }
+.prd-footer .prd-footer-logo-img { height: 96px; width: auto; max-width: none; }
 .prd-footer .prd-wordmark { font-size: 34px; color: #F4EFE6; }
 .prd-footer-title { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #9FB5A8; margin-bottom: 14px; }
 .prd-footer-links { list-style: none; display: grid; gap: 10px; font-size: 15px; }
@@ -650,7 +651,7 @@ a.prd-info-item:hover { border-color: var(--prd-ink); }
 }
 .prd-app-banner-x:hover { color: #F4EFE3 !important; }
 .prd-app-banner-open { flex: 1; min-width: 0; height: 100%; display: flex; align-items: center; gap: 8px; text-align: left; }
-.prd-app-banner-open img { flex: none; width: 38px; height: 38px; border-radius: 10px; }
+.prd-app-banner .prd-app-banner-open img { flex: none; width: 38px; height: 38px; border-radius: 10px; }
 .prd-app-banner-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2; }
 .prd-app-banner-text strong { font-size: 14px; font-weight: 700; }
 .prd-app-banner-text span { font-size: 12px; opacity: .78; }
@@ -700,7 +701,7 @@ a.prd-info-item:hover { border-color: var(--prd-ink); }
   background: var(--prd-sand); color: var(--prd-ink);
 }
 .prd-app-head { display: flex; gap: 14px; align-items: center; padding-right: 40px; margin-bottom: 20px; }
-.prd-app-head img { flex: none; width: 64px; height: 64px; border-radius: 16px; box-shadow: 0 0 0 1px var(--prd-line); }
+.prd-app-panel .prd-app-head img { flex: none; width: 64px; height: 64px; border-radius: 16px; box-shadow: 0 0 0 1px var(--prd-line); }
 .prd-app-head h2 { font-family: var(--prd-display); font-weight: 400; font-size: 30px; line-height: 1; letter-spacing: .01em; margin-bottom: 6px; }
 .prd-app-head p { font-size: 14px; color: var(--prd-ink-2); line-height: 1.45; }
 
