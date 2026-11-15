@@ -18,9 +18,14 @@ $img = get_template_directory_uri() . '/assets/img/';
 <section class="prd-section">
   <div class="prd-wrap prd-feature">
     <div class="prd-feature-img prd-feature-img-tall">
-      <?php if ( has_post_thumbnail() ) :
+      <?php
+      $about_jersey = prdrwndn_cat_products( 'prd_jersey_cat', 1 );
+      $about_img    = $about_jersey ? prdrwndn_product_img( $about_jersey[0], 'large' ) : '';
+      if ( has_post_thumbnail() ) :
         the_post_thumbnail( 'large' );
-      else : ?>
+      elseif ( $about_img ) : ?>
+        <img src="<?php echo esc_url( $about_img ); ?>" alt="" loading="lazy"/>
+      <?php else : ?>
         <img src="<?php echo esc_url( $img . 'izuba-front.webp' ); ?>" alt="" loading="lazy"/>
       <?php endif; ?>
     </div>
