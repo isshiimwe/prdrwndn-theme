@@ -817,7 +817,7 @@ function prdrwndn_app_page() {
     ?>
     <div class="wrap">
       <h1>PRDRWNDN App</h1>
-      <p>The app people add to their home screen is your website, opened full screen. These three files in your site's main folder tell phones how to install and open it. This button writes them from the theme (version <?php echo esc_html( PRDRWNDN_APP_VERSION ); ?>). Old copies are saved to <code>wp-content/uploads/prdrwndn-backup/</code> first.</p>
+      <p>The app people add to their home screen lives at <a href="<?php echo esc_url( home_url( '/app/' ) ); ?>" target="_blank">/app/</a>. These three files in your site's main folder tell phones how to install and open it. This button writes them from the theme (version <?php echo esc_html( PRDRWNDN_APP_VERSION ); ?>). Old copies are saved to <code>wp-content/uploads/prdrwndn-backup/</code> first.</p>
       <?php if ( 'updated' === $done ) : ?><div class="notice notice-success"><p>App files updated.</p></div><?php endif; ?>
       <?php if ( 'failed' === $done ) : ?><div class="notice notice-error"><p>Some files could not be written. Check the folder permissions in Hostinger's File Manager.</p></div><?php endif; ?>
       <table class="widefat striped" style="max-width:560px">

@@ -46,9 +46,10 @@ add_action( 'template_redirect', function () {
 ════════════════════════════════════════════════════ */
 function prdrwndn_app_config() {
     $cats = [];
-    foreach ( [ 'prd_jersey_cat' => 'Jerseys', 'prd_fresh_cat' => 'Car fresheners', 'prd_flag_cat' => 'Flags', 'prd_tee_cat' => 'T-shirts' ] as $key => $label ) {
-        $t = prdrwndn_cat( $key );
-        if ( $t ) $cats[] = [ 'key' => str_replace( [ 'prd_', '_cat' ], '', $key ), 'slug' => $t->slug, 'name' => $label ];
+    // key = what the app's links use (#shop/jerseys, #shop/fresh …)
+    foreach ( [ 'jerseys' => [ 'prd_jersey_cat', 'Jerseys' ], 'fresh' => [ 'prd_fresh_cat', 'Car fresheners' ], 'flags' => [ 'prd_flag_cat', 'Flags' ], 'tees' => [ 'prd_tee_cat', 'T-shirts' ] ] as $key => $c ) {
+        $t = prdrwndn_cat( $c[0] );
+        if ( $t ) $cats[] = [ 'key' => $key, 'slug' => $t->slug, 'name' => $c[1] ];
     }
     $wc = class_exists( 'WooCommerce' );
     $account = $wc ? wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' );

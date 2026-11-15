@@ -306,3 +306,14 @@ h1, h2, h3, p { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* Desktop: show the app as a phone-width column. */
+@media (min-width: 700px) {
+  html { background: var(--sand); }
+  body { background: var(--sand); }
+  #views, .bar, .tabs { left: 50%; right: auto; width: 560px; margin-left: -280px; }
+  #views { background: var(--bg); box-shadow: 0 0 0 1px var(--line); }
+  .toast { left: 50%; right: auto; width: 528px; margin-left: -264px; }
+  .grid { grid-template-columns: 1fr 1fr; }
+  .rail { grid-auto-columns: 46%; }
+}
