@@ -711,7 +711,7 @@ function prdrwndn_pwa_head() { ?>
     <meta name="apple-mobile-web-app-capable" content="yes"/>
     <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
     <meta name="apple-mobile-web-app-title" content="PRDRWNDN"/>
-    <link rel="apple-touch-icon" href="<?php echo esc_url( home_url( '/wp-content/uploads/2025/12/cropped-IMG_2191-270x270.png' ) ); ?>"/>
+    <link rel="apple-touch-icon" href="<?php echo esc_url( get_site_icon_url( 180 ) ?: get_template_directory_uri() . '/assets/img/apple-touch-icon.png' ); ?>"/>
 <?php }
 add_action( 'wp_head', 'prdrwndn_pwa_head' );
 

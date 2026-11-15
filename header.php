@@ -34,13 +34,7 @@ $prd_shop = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 
     </button>
 
     <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="prd-brand" aria-label="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?> — home">
-      <?php
-      $logo_id = get_theme_mod( 'custom_logo' );
-      if ( $logo_id ) :
-          echo wp_get_attachment_image( $logo_id, 'medium', false, [ 'class' => 'prd-brand-img', 'alt' => 'PRDRWNDN®', 'loading' => 'eager' ] );
-      else : ?>
-        <span class="prd-wordmark">PRDRWNDN<sup>®</sup></span>
-      <?php endif; ?>
+      <img class="prd-brand-img" src="<?php echo esc_url( get_template_directory_uri() . '/assets/img/logo.svg' ); ?>" alt="Proud Rwandan — PRDRWNDN®" width="857" height="639" loading="eager"/>
     </a>
 
     <nav class="prd-nav" aria-label="Primary">

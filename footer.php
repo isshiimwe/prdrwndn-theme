@@ -11,13 +11,7 @@ $prd_wa   = prdrwndn_whatsapp_url( 'Hi PRDRWNDN!' );
 
       <div class="prd-footer-brand">
         <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="prd-footer-logo" aria-label="PRDRWNDN® home">
-          <?php
-          $logo_id = get_theme_mod( 'custom_logo' );
-          if ( $logo_id ) :
-              echo wp_get_attachment_image( $logo_id, 'medium', false, [ 'class' => 'prd-footer-logo-img', 'alt' => 'PRDRWNDN®', 'loading' => 'lazy' ] );
-          else : ?>
-            <span class="prd-wordmark">PRDRWNDN<sup>®</sup></span>
-          <?php endif; ?>
+          <img class="prd-footer-logo-img" src="<?php echo esc_url( get_template_directory_uri() . '/assets/img/logo-light.svg' ); ?>" alt="Proud Rwandan — PRDRWNDN®" width="857" height="639" loading="lazy"/>
         </a>
         <p><?php echo esc_html( prd_mod( 'prdrwndn_footer_desc' ) ); ?></p>
         <?php prdrwndn_flag_stripe( 'prd-flag-mini' ); ?>
