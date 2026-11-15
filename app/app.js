@@ -733,17 +733,49 @@
     });
   });
 
-  /* ════════ Start ════════ */
-  var started = Date.now();
-  var launch = $('#launch');
+  /* ════════ Start ════════
+     The flag stripe at the bottom of the launch screen fills as each part loads
+     (products, account, cart, fonts, first photos). The app opens the moment it's full. */
+  var launch = $('#launch'), bar = $('#launch-bar');
   var firstOpen = true;
   try { firstOpen = sessionStorage.getItem('prdLaunched') !== '1'; sessionStorage.setItem('prdLaunched', '1'); } catch (e) {}
   if (!firstOpen) launch.classList.add('is-done');
-  function hideLaunch() {
-    var wait = firstOpen ? Math.max(0, 600 - (Date.now() - started)) : 0;
-    setTimeout(function () { launch.classList.add('is-done'); }, wait);
+  var steps = 0, total = 5, done = false;
+  function progress(n) {
+    var pct = done ? 100 : Math.min(96, 8 + (steps / total) * 88);
+    if (bar) bar.style.width = pct + '%';
   }
-  setTimeout(hideLaunch, 2200); // never hold the launch screen longer than this
+  function step() { steps++; progress(); }
+  function hideLaunch() {
+    if (done) return;
+    done = true; progress();
+    setTimeout(function () { launch.classList.add('is-done'); }, firstOpen ? 280 : 0);
+  }
+  requestAnimationFrame(function () { progress(); });
+  setTimeout(hideLaunch, 6000); // never hold the launch screen longer than this
+
+  function waitImages() {
+    var imgs = $$('#view-home .hero-art img, #view-home .rail .card img').slice(0, 4);
+    return Promise.all(imgs.map(function (im) {
+      return im.complete ? null : new Promise(function (r) { im.addEventListener('load', r); im.addEventListener('error', r); });
+    }));
+  }
+  function timeout(p, ms) { return Promise.race([p, new Promise(function (r) { setTimeout(r, ms); })]); }
+
+  /* If the saved copy of the app is older than the store's version, fetch the new one,
+     save it for next time and reload once. */
+  function refreshShell(version) {
+    try { if (sessionStorage.getItem('prdShellFor') === version) return Promise.resolve(false); sessionStorage.setItem('prdShellFor', version); } catch (e) {}
+    if (!window.caches) return Promise.resolve(true);
+    return fetch(C.appUrl, { cache: 'no-store', credentials: 'same-origin' }).then(function (res) {
+      if (!res.ok) return false;
+      return caches.keys().then(function (keys) {
+        return Promise.all(keys.filter(function (k) { return k.indexOf('prd-pages-') === 0; }).map(function (k) {
+          return caches.open(k).then(function (c) { return c.put(C.appUrl, res.clone()); });
+        }));
+      }).then(function () { return true; });
+    }).catch(function () { return false; });
+  }
 
   var bioCheck = (window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable)
     ? PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(function () { return false; }) : Promise.resolve(false);
@@ -751,11 +783,23 @@
   S.wish = localWish();
   route();
   onlineState();
-  Promise.all([loadCatalog(), loadSession(), loadCart(), bioCheck.then(function (ok) { S.bio = !!ok; })]).then(function () {
+  var fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+  Promise.all([
+    loadCatalog().then(step),
+    loadSession().then(function (s) { step(); return s; }),
+    loadCart().then(step),
+    timeout(fonts, 1500).then(step),
+    bioCheck.then(function (ok) { S.bio = !!ok; })
+  ]).then(function (res) {
+    var sess = res[1];
+    if (sess && sess.version && C.version && sess.version !== C.version) {
+      return refreshShell(sess.version).then(function (reload) { if (reload) { location.reload(); return new Promise(function () {}); } });
+    }
+  }).then(function () {
     S.ready = true;
-    hideLaunch();
     route();
-  });
+    return timeout(waitImages(), 1500);
+  }).then(function () { step(); hideLaunch(); });
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('/service-worker.js', { scope: '/' }).catch(function () {}); });

@@ -2,9 +2,11 @@
  * PRDRWNDN app service worker - version __VERSION__
  *
  * The installed app is /app/ (served by the theme).
- * This worker only does two things:
- *   1. Sends the old app address (/app.html) to /app/.
- *   2. Keeps a copy of pages you have visited, so the app still
+ * This worker:
+ *   1. Opens the app screen (/app/) instantly from a saved copy and refreshes
+ *      that copy in the background.
+ *   2. Sends the old app address (/app.html) to /app/.
+ *   3. Keeps a copy of pages you have visited, so the app still
  *      opens with no signal (cart, checkout and account are never kept).
  *
  * WordPress writes this file to the site root from the theme copy
@@ -27,8 +29,14 @@ var OFFLINE = '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' +
   '<p>Check your connection, then try again.</p>' +
   '<button onclick="location.reload()">Try again</button></main></body></html>';
 
-self.addEventListener('install', function () {
+var SHELL = '/app/';
+
+self.addEventListener('install', function (event) {
   self.skipWaiting();
+  // Save the app screen now, so the next launch opens instantly.
+  event.waitUntil(caches.open(CACHE).then(function (c) {
+    return fetch(SHELL, { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { if (r.ok) return c.put(SHELL, r); });
+  }).catch(function () {}));
 });
 
 self.addEventListener('activate', function (event) {
@@ -57,6 +65,23 @@ self.addEventListener('fetch', function (event) {
   // Phones that installed the old app still open /app.html: send them to the new app.
   if (url.pathname === '/app.html') {
     event.respondWith(Response.redirect('/app/', 302));
+    return;
+  }
+
+  // The app screen: open the saved copy right away, fetch a fresh one in the background.
+  // (The app itself checks the store's version and reloads if the saved copy was old.)
+  if (url.pathname === '/app/' || url.pathname === '/app') {
+    var fresh = fetch(request).then(function (response) {
+      if (response.ok && response.type === 'basic') {
+        var copy = response.clone();
+        caches.open(CACHE).then(function (c) { return c.put(SHELL, copy); });
+      }
+      return response;
+    });
+    event.respondWith(caches.match(SHELL).then(function (hit) {
+      if (hit) { event.waitUntil(fresh.catch(function () {})); return hit; }
+      return fresh.catch(function () { return new Response(OFFLINE, { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }); });
+    }));
     return;
   }
 

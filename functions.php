@@ -720,7 +720,7 @@ function prdrwndn_cart_extras() {
      the site root. Tools → PRDRWNDN App writes them from this theme
      (templates in assets/app/). Bump PRDRWNDN_APP_VERSION when they change.
 ════════════════════════════════════════════════════ */
-define( 'PRDRWNDN_APP_VERSION', '2.2.0' );
+define( 'PRDRWNDN_APP_VERSION', '2.3.0' );
 
 // The app itself (/app/), its REST API, Face ID sign-in and order tracking.
 require_once get_template_directory() . '/inc/app.php';

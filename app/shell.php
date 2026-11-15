@@ -18,7 +18,9 @@ $prd_dir = get_template_directory_uri();
 <style>/* First paint: cream, never black, launch screen visible before app.css loads. */
 html,body{margin:0;background:#F7F3EC;color-scheme:light}
 .launch{position:fixed;inset:0;z-index:100;background:#F7F3EC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
-.launch-crest{width:120px;height:auto}.launch-logo{width:150px;height:auto}</style>
+.launch-crest{width:120px;height:auto}.launch-logo{width:150px;height:auto}
+.launch-stripe{position:absolute;left:0;right:0;bottom:0;height:calc(6px + env(safe-area-inset-bottom,0px));background:linear-gradient(90deg,rgba(32,170,84,.22) 0 33.3%,rgba(255,210,0,.3) 33.3% 66.6%,rgba(32,160,208,.22) 66.6%)}
+.launch-bar{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#20AA54 0 33.3%,#FFD200 33.3% 66.6%,#20A0D0 66.6%) left/100vw 100% no-repeat}</style>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
@@ -36,7 +38,7 @@ html,body{margin:0;background:#F7F3EC;color-scheme:light}
 <div id="launch" class="launch" aria-hidden="true">
   <img class="launch-crest" src="<?php echo esc_url( $prd_dir . '/assets/img/crest.svg' ); ?>" alt="" width="120" height="96" data-no-lazy="1"/>
   <img class="launch-logo" src="<?php echo esc_url( $prd_dir . '/assets/img/logo.svg' ); ?>" alt="" width="150" height="112" data-no-lazy="1"/>
-  <span class="launch-stripe"></span>
+  <span class="launch-stripe" role="progressbar" aria-label="Loading"><i class="launch-bar" id="launch-bar"></i></span>
 </div>
 
 <header class="bar" id="bar">
