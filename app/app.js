@@ -142,7 +142,7 @@
     return c ? p.cats.indexOf(c.slug) >= 0 : false;
   }
   function priceText(p) {
-    if (p.priceMax && p.priceMax !== p.price) return money(p.price) + ' – ' + money(p.priceMax);
+    if (p.priceMax && p.priceMax !== p.price) return money(p.price) + ' to ' + money(p.priceMax);
     return money(p.price);
   }
   function lowNote(p) {
@@ -232,7 +232,7 @@
     var c = S.cart;
     if (!c) { v.innerHTML = '<div class="pad">' + skeletonCards(1) + '</div>'; return; }
     if (!c.items || !c.items.length) {
-      v.innerHTML = '<div class="empty"><div class="empty-ico">' + I.bag + '</div><h3>Your cart is empty</h3><p>Jerseys are 2 for $' + esc(C.deal && C.deal.price) + ' — mix and match.</p><a class="btn btn-primary" href="#shop/jerseys">Shop jerseys</a></div>';
+      v.innerHTML = '<div class="empty"><div class="empty-ico">' + I.bag + '</div><h3>Your cart is empty</h3><p>Jerseys are 2 for $' + esc(C.deal && C.deal.price) + '. Mix and match.</p><a class="btn btn-primary" href="#shop/jerseys">Shop jerseys</a></div>';
       return;
     }
     var unit = c.totals.currency_minor_unit;
@@ -255,7 +255,7 @@
     rows += '<div><span>Shipping</span><span>' + (shipKnown ? money(minor(t.total_shipping, unit)) : 'At checkout') + '</span></div>';
     if (Number(t.total_tax)) rows += '<div><span>Tax</span><span>' + money(minor(t.total_tax, unit)) + '</span></div>';
     rows += '<div class="grand"><span>' + (shipKnown ? 'Total' : 'Total so far') + '</span><span>' + money(minor(t.total_price, unit)) + '</span></div>';
-    h += '<div class="totals">' + rows + (C.pickup ? '<small>' + esc(C.pickup) + ' — choose it at checkout.</small>' : '') + '</div>';
+    h += '<div class="totals">' + rows + (C.pickup ? '<small>' + esc(C.pickup) + '. Choose it at checkout.</small>' : '') + '</div>';
     h += '<div class="pay"><button class="btn btn-primary btn-block" type="button" data-checkout>' + I.lock + ' Checkout</button>' +
       '<div class="pay-note">Pay with <span class="pay-marks"><span>Apple Pay</span><span>Google Pay</span><span>Card</span></span></div></div>';
     v.innerHTML = h;
@@ -283,7 +283,7 @@
       h += '<div class="faceid-card"><span class="row-ico">' + I.face + '</span><p>Sign in with ' + esc(bioName) + ' next time. No password needed.</p><button class="btn btn-primary" type="button" data-passkey-add>Turn on</button></div>';
     }
     var orders = S.orders || [];
-    h += '<div class="stats"><a class="stat" href="#orders"><b>' + (S.orders ? orders.length : '–') + '</b><span>Orders</span></a><a class="stat" href="#wishlist"><b>' + S.wish.length + '</b><span>Saved</span></a></div>';
+    h += '<div class="stats"><a class="stat" href="#orders"><b>' + (S.orders ? orders.length : '…') + '</b><span>Orders</span></a><a class="stat" href="#wishlist"><b>' + S.wish.length + '</b><span>Saved</span></a></div>';
     h += '<div class="list-title">Shopping</div><div class="list">' +
       rowLink('#orders', I.box, 'My orders', S.orders ? orders.length + '' : '') +
       rowLink('#orders/tracking', I.truck, 'Track a shipment', '') +
@@ -439,7 +439,7 @@
       (imgs.length > 1 ? '<div class="pp-dots" id="pp-dots">' + imgs.map(function (_, i) { return '<i' + (i === 0 ? ' class="is-on"' : '') + '></i>'; }).join('') + '</div>' : '') +
       '<div class="pp-body"><div class="eyebrow">' + (p.jersey ? 'Football jersey · PRDRWNDN®' : 'PRDRWNDN®') + '</div><h2 class="pp-name">' + esc(p.name) + '</h2>' +
       '<div class="pp-price">' + price + (p.onSale && p.regular > p.price && !v ? '<del>' + money(p.regular) + '</del>' : '') + '</div>';
-    if (p.jersey && C.deal && C.deal.on) h += '<div class="pp-deal"><strong>' + esc(C.deal.label) + '</strong> — mix and match any two jerseys. The discount comes off in your cart.</div>';
+    if (p.jersey && C.deal && C.deal.on) h += '<div class="pp-deal"><strong>' + esc(C.deal.label) + '</strong>: mix and match any two jerseys. The discount comes off in your cart.</div>';
     (p.options || []).forEach(function (o) {
       var isSize = /size/i.test(o.name);
       h += '<div class="opt"><div class="opt-head"><strong>' + esc(o.name) + (P.sel[o.key] ? ': ' + esc(o.values.filter(function (x) { return x.value === P.sel[o.key]; })[0].label) : '') + '</strong>' +
@@ -462,7 +462,7 @@
     var desc = '';
     if (p.desc) desc += '<details open><summary>Details</summary><div class="rich">' + p.desc + '</div></details>';
     else if (p.short) desc += '<details open><summary>Details</summary><div class="rich"><p>' + esc(p.short) + '</p></div></details>';
-    desc += '<details><summary>Shipping &amp; pickup</summary><div class="rich"><p>Ships from Phoenix, AZ.' + (C.pickup ? ' ' + esc(C.pickup) + ' — choose it at checkout.' : '') + '</p></div></details>';
+    desc += '<details><summary>Shipping &amp; pickup</summary><div class="rich"><p>Ships from Phoenix, AZ.' + (C.pickup ? ' ' + esc(C.pickup) + '. Choose it at checkout.' : '') + '</p></div></details>';
     h += '<div class="pp-desc">' + desc + '</div></div>';
     var needs = (p.options || []).filter(function (o) { return !P.sel[o.key]; });
     var label = !p.inStock ? 'Sold out' : needs.length ? 'Pick a ' + needs[0].name.toLowerCase() : (v && !v.inStock ? 'Sold out' : 'Add to cart · ' + money((v ? v.price : p.price) * P.qty));

@@ -618,7 +618,7 @@ add_action( 'woocommerce_process_shop_order_meta', function ( $order_id ) {
 function prdrwndn_tracking_html( $order, $plain = false ) {
     $t = prdrwndn_tracking( $order );
     if ( ! $t ) return '';
-    if ( $plain ) return "\nTracking: " . $t['carrier'] . ' ' . $t['number'] . ( $t['url'] ? ' — ' . $t['url'] : '' ) . "\n";
+    if ( $plain ) return "\nTracking: " . $t['carrier'] . ' ' . $t['number'] . ( $t['url'] ? ' (' . $t['url'] . ')' : '' ) . "\n";
     $num = esc_html( $t['number'] );
     if ( $t['url'] ) $num = '<a href="' . esc_url( $t['url'] ) . '">' . $num . '</a>';
     return '<p><strong>Tracking:</strong> ' . esc_html( $t['carrier'] ) . ' ' . $num . '</p>';

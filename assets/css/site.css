@@ -532,7 +532,7 @@ a.prd-info-item:hover { border-color: var(--prd-ink); }
 .prd-details summary { list-style: none; cursor: pointer; padding: 16px 0; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
 .prd-details summary::-webkit-details-marker { display: none; }
 .prd-details summary::after { content: '+'; font-size: 22px; font-weight: 400; line-height: 1; }
-.prd-details[open] summary::after { content: '–'; }
+.prd-details[open] summary::after { content: '\2212'; }
 .prd-details-body { padding: 0 0 18px; color: var(--prd-ink-2); font-size: 15px; }
 .prd-details-body a { color: var(--prd-forest); font-weight: 600; }
 .prd-table-wrap { overflow-x: auto; margin-top: 12px; }

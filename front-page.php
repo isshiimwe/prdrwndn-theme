@@ -73,7 +73,7 @@ if ( function_exists( 'wc_get_products' ) ) {
       <p class="prd-hero-facts">
         <?php if ( $from ) : ?><span><strong>$<?php echo esc_html( wc_format_decimal( $from, 0 ) ); ?></strong> each</span><?php endif; ?>
         <?php if ( $deal_on ) : ?><span><strong><?php echo esc_html( prdrwndn_deal_label() ); ?></strong></span><?php endif; ?>
-        <span>Sizes S–3XL</span>
+        <span>Sizes S to 3XL</span>
       </p>
       <div class="prd-actions">
         <a class="prd-btn prd-btn-primary" href="<?php echo esc_url( $jersey_url ); ?>">Shop jerseys <?php echo prdrwndn_icon( 'arrow' ); ?></a>

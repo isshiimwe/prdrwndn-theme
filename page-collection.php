@@ -19,7 +19,7 @@ $cats = get_terms( [ 'taxonomy' => 'product_cat', 'hide_empty' => true, 'exclude
   <div class="prd-wrap">
     <div class="prd-eyebrow">PRDRWNDN®</div>
     <h1 class="prd-h1">The full collection</h1>
-    <p class="prd-pagehead-desc">Everything we make — jerseys, the car freshener that started it all, flags and apparel.</p>
+    <p class="prd-pagehead-desc">Everything we make: jerseys, the car freshener that started it all, flags and apparel.</p>
   </div>
 </section>
 

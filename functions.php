@@ -237,7 +237,7 @@ function prdrwndn_defaults() {
         'prd_whatsapp'            => '+1 480 382 7077',
         'prd_announce'            => '2 jerseys for $80 · Ships from Phoenix, AZ',
         'prd_founder_photo'       => 0,
-        'prdrwndn_footer_desc'    => 'Rwanda-heritage goods: football jerseys, map-shaped car fresheners, flags and apparel — for the global Rwandan community.',
+        'prdrwndn_footer_desc'    => 'Rwanda-heritage goods: football jerseys, map-shaped car fresheners, flags and apparel for the global Rwandan community.',
     ];
 }
 
@@ -285,10 +285,10 @@ function prdrwndn_customizer( $wp_customize ) {
 
     /* Homepage */
     $wp_customize->add_section( 'prdrwndn_homepage', [ 'title' => __( 'Homepage', 'prdrwndn' ), 'panel' => 'prdrwndn_panel' ] );
-    $add( 'prdrwndn_homepage', 'prd_hero_eyebrow', 'Hero — small line above the headline' );
-    $add( 'prdrwndn_homepage', 'prd_hero_title', 'Hero — headline' );
-    $add( 'prdrwndn_homepage', 'prd_hero_text', 'Hero — text', 'textarea', 'sanitize_textarea_field' );
-    $add( 'prdrwndn_homepage', 'prdrwndn_freshener_id', 'Car freshener — Product ID', 'number', 'absint',
+    $add( 'prdrwndn_homepage', 'prd_hero_eyebrow', 'Hero: small line above the headline' );
+    $add( 'prdrwndn_homepage', 'prd_hero_title', 'Hero: headline' );
+    $add( 'prdrwndn_homepage', 'prd_hero_text', 'Hero: text', 'textarea', 'sanitize_textarea_field' );
+    $add( 'prdrwndn_homepage', 'prdrwndn_freshener_id', 'Car freshener product ID', 'number', 'absint',
         'The freshener shown on the homepage and offered as a $5 add-on. Leave empty to use the first product named "freshener".' );
 
     /* Jerseys & deals */
@@ -625,7 +625,7 @@ add_action( 'woocommerce_single_product_summary', function () {
 add_action( 'woocommerce_single_product_summary', function () {
     global $product;
     if ( ! $product || ! prdrwndn_is_jersey( $product->get_id() ) || ! prdrwndn_deal_on() ) return;
-    echo '<p class="prd-deal-note"><strong>' . esc_html( prdrwndn_deal_label() ) . '</strong> — mix any two jerseys. The discount shows in your cart.</p>';
+    echo '<p class="prd-deal-note"><strong>' . esc_html( prdrwndn_deal_label() ) . '</strong>: mix any two jerseys. The discount shows in your cart.</p>';
 }, 11 );
 
 // WhatsApp order, pickup note, size & fit, freshener add-on — after add to cart
@@ -645,7 +645,7 @@ add_action( 'woocommerce_single_product_summary', function () {
         );
     }
     if ( prd_mod( 'prd_pickup_on' ) ) {
-        echo '<p class="prd-pickup">' . prdrwndn_icon( 'pin' ) . '<span>' . esc_html( prd_mod( 'prd_pickup_text' ) ) . ' — choose it at checkout.</span></p>';
+        echo '<p class="prd-pickup">' . prdrwndn_icon( 'pin' ) . '<span>' . esc_html( prd_mod( 'prd_pickup_text' ) ) . '. Choose it at checkout.</span></p>';
     }
     echo '</div>';
 
@@ -720,6 +720,16 @@ function prdrwndn_cart_extras() {
     echo '</div>';
 }
 
+
+/** Keep titles as typed: WordPress turns " - " into a long dash; put the plain hyphen back. */
+add_filter( 'the_title', function ( $title ) {
+    return str_replace( [ '&#8211;', '&#8212;', '–', '—' ], '-', (string) $title );
+}, 11 );
+
+/** Price ranges read "$5 to $10" instead of using a dash. */
+add_filter( 'woocommerce_format_price_range', function ( $price, $from, $to ) {
+    return sprintf( '%1$s to %2$s', is_numeric( $from ) ? wc_price( $from ) : $from, is_numeric( $to ) ? wc_price( $to ) : $to );
+}, 10, 3 );
 
 /* ════════════════════════════════════════════════════
    8. APP — HOME-SCREEN APP (PWA)

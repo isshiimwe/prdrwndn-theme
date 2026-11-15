@@ -34,7 +34,7 @@ $img = get_template_directory_uri() . '/assets/img/';
       <h2 class="prd-h2">PRDRWNDN®</h2>
       <p><strong>PRDRWNDN started with a simple question:</strong> what would it look like to make a homesick person feel held?</p>
       <p>We make contemporary things with an old-soul point of view. A jersey can carry the sun from a flag. A pattern can carry a region’s art. A flag can turn any room into a return.</p>
-      <p>Our car fresheners — cut in the exact shape of Rwanda’s borders — started it all. Now there are football jerseys too: Izuba and Imigongo, made for Rwandans everywhere.</p>
+      <p>Our car fresheners, cut in the exact shape of Rwanda’s borders, started it all. Now there are football jerseys too: Izuba and Imigongo, made for Rwandans everywhere.</p>
       <?php prdrwndn_flag_stripe( 'prd-flag-mini' ); ?>
       <div class="prd-actions">
         <a href="<?php echo esc_url( $jersey_url ); ?>" class="prd-btn prd-btn-primary">Shop the jerseys</a>
@@ -79,10 +79,10 @@ if ( trim( wp_strip_all_tags( (string) $prd_story ) ) !== '' ) : ?>
     <div class="prd-story-items prd-story-items-4">
       <?php
       $values = [
-        [ 'Memory',    'Every product carries a piece of Rwanda — its shape, its colors, its feeling.' ],
+        [ 'Memory',    'Every product carries a piece of Rwanda: its shape, its colors, its feeling.' ],
         [ 'Place',     'The thousand hills. The borders you’d trace on a map. The land that holds you.' ],
         [ 'Pride',     'Not loud. Not performative. Just the quiet certainty of knowing where you’re from.' ],
-        [ 'Community', 'For Rwandans everywhere — and friends of Rwanda who’ve felt the pull of a place they call home.' ],
+        [ 'Community', 'For Rwandans everywhere, and friends of Rwanda who’ve felt the pull of a place they call home.' ],
       ];
       foreach ( $values as $v ) : ?>
         <article><h3><?php echo esc_html( $v[0] ); ?></h3><p><?php echo esc_html( $v[1] ); ?></p></article>

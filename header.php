@@ -33,8 +33,8 @@ $prd_shop = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 
       <span class="prd-i-close"><?php echo prdrwndn_icon( 'close' ); ?></span>
     </button>
 
-    <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="prd-brand" aria-label="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?> — home">
-      <img class="prd-brand-img" src="<?php echo esc_url( get_template_directory_uri() . '/assets/img/logo.svg' ); ?>" alt="Proud Rwandan — PRDRWNDN®" width="59" height="44" loading="eager" fetchpriority="high" data-no-lazy="1"/>
+    <a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="prd-brand" aria-label="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?> home">
+      <img class="prd-brand-img" src="<?php echo esc_url( get_template_directory_uri() . '/assets/img/logo.svg' ); ?>" alt="Proud Rwandan PRDRWNDN®" width="59" height="44" loading="eager" fetchpriority="high" data-no-lazy="1"/>
     </a>
 
     <nav class="prd-nav" aria-label="Primary">

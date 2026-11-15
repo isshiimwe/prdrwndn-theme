@@ -9,7 +9,7 @@ get_header( 'shop' );
 $current_cat = get_queried_object();
 $is_cat      = is_product_category();
 $page_title  = $is_cat ? $current_cat->name : __( 'Shop', 'prdrwndn' );
-$page_desc   = $is_cat ? $current_cat->description : 'Jerseys, car fresheners, flags and apparel — for the global Rwandan community.';
+$page_desc   = $is_cat ? $current_cat->description : 'Jerseys, car fresheners, flags and apparel for the global Rwandan community.';
 $is_jersey_cat = $is_cat && $current_cat->slug === prd_mod( 'prd_jersey_cat' );
 
 // We print the result count and sorting ourselves in the toolbar
