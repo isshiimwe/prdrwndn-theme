@@ -748,7 +748,7 @@ define( 'PRDRWNDN_APP_VERSION', '2.3.0' );
 
 // The app itself (/app/), its REST API, Face ID sign-in and order tracking.
 require_once get_template_directory() . '/inc/app.php';
-require_once get_template_directory() . '/inc/stock.php';
+// Jersey Stock lives in the PRDRWNDN POS plugin (Stock tab).
 
 function prdrwndn_app_icon( $file ) {
     return wp_make_link_relative( get_template_directory_uri() . '/assets/img/' . $file );
